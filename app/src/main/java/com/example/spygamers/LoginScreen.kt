@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 
 @Composable
-fun loginScreen(navController: NavController) {
+fun LoginScreen(navController: NavController) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
@@ -78,7 +78,9 @@ fun loginScreen(navController: NavController) {
                 navController.navigate("placeholder")
             },
             enabled = username.isNotBlank() && password.isNotBlank(),
-            modifier = Modifier.width(150.dp).padding(8.dp)
+            modifier = Modifier
+                .width(150.dp)
+                .padding(8.dp)
         ) {
             Text("Login")
         }
@@ -89,10 +91,11 @@ fun loginScreen(navController: NavController) {
                 // Navigate to Register screen
                 navController.navigate(Screen.RegisterScreen.route)
             },
-            modifier = Modifier.width(150.dp).padding(8.dp)
+            modifier = Modifier
+                .width(150.dp)
+                .padding(8.dp)
         ) {
             Text("Register")
         }
-
     }
 }

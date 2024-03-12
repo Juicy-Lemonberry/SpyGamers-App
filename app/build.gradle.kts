@@ -86,7 +86,11 @@ dependencies {
     // DataStore
     implementation("androidx.datastore:datastore-preferences:1.0.0")
 
+    // Bcrypt
+    implementation ("de.svenkubiak:jBCrypt:0.4.1")
 
-    // Testing
-    androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0-rc01")
+    //Retrofit
+    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
+
 }

@@ -1,6 +1,8 @@
 package com.example.spygamers
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -22,10 +24,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
+import com.example.spygamers.RetrofitClient.authService
 import kotlinx.coroutines.launch
+import org.mindrot.jbcrypt.BCrypt
+
 
 @Composable
-fun registerScreen(
+fun RegisterScreen(
     navController: NavController,
     viewModel: GamerViewModel
 ) {
@@ -36,127 +41,178 @@ fun registerScreen(
     var isUsernameValid by remember { mutableStateOf(false) }
     var isEmailValid by remember { mutableStateOf(false) }
     var isPasswordValid by remember { mutableStateOf(false) }
+    var isConfirmPasswordValid by remember { mutableStateOf(false) }
+    var message by remember { mutableStateOf("") }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 20.dp), // Add horizontal padding for better margins
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+            .padding(horizontal = 20.dp),
+        contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = "Register",
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-        // Username Text Field
-        TextField(
-            value = username,
-            onValueChange = {
-                username = it
-                isUsernameValid = username.length >= 4 //Minimum of 4 characters
-            },
-            isError = !isUsernameValid,
-            label = { Text("Username") },
-            placeholder = { Text(text = "Enter username") },
+        Column(
             modifier = Modifier
-                .width(300.dp)
-                .padding(bottom = 8.dp)
-                .clip(shape = RoundedCornerShape(15.dp, 15.dp, 15.dp, 15.dp))
-        )
+                .fillMaxSize()
+                .padding(horizontal = 20.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Register",
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(bottom = 16.dp),
+            )
 
-        // Email Text Field
-        TextField(
-            value = email,
-            onValueChange = {
-                email = it
-                isEmailValid = android.util.Patterns.EMAIL_ADDRESS.matcher(it).matches()
-            },
-            isError = !isEmailValid,
-            label = { Text("Email") },
-            placeholder = { Text(text = "Enter email") },
-            modifier = Modifier
-                .width(300.dp)
-                .padding(bottom = 8.dp)
-                .clip(shape = RoundedCornerShape(15.dp, 15.dp, 15.dp, 15.dp))
-        )
+            Text(
+                text = message,
+                modifier = Modifier.padding(bottom = 10.dp)
+            )
+            // Username Text Field
+            TextField(
+                value = username,
+                onValueChange = {
+                    username = it
 
-        // Password Text Field
-        TextField(
-            value = password,
-            onValueChange = {
-                password = it
-                isPasswordValid = checkPasswordValidity(it)
-            },
-            isError = !isPasswordValid,
-            label = { Text("Password") },
-            placeholder = { Text(text = "Enter password") },
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier
-                .width(300.dp)
-                .padding(bottom = 8.dp)
-                .clip(shape = RoundedCornerShape(15.dp, 15.dp, 15.dp, 15.dp))
-        )
+                    if (username.length < 4) {
+                        message = "Your Username should have more than 4 characters"
+                        isUsernameValid = false
+                    } else {
+                        message = ""
+                        isUsernameValid = true
+                    }
+                },
+                isError = !isUsernameValid,
+                label = { Text("Username") },
+                placeholder = { Text(text = "Enter username") },
+                modifier = Modifier
+                    .width(300.dp)
+                    .padding(bottom = 8.dp)
+                    .clip(shape = RoundedCornerShape(15.dp, 15.dp, 15.dp, 15.dp))
+            )
 
-        // Confirm Password Text Field
-        TextField(
-            value = confirmPassword,
-            onValueChange = { confirmPassword = it },
-            isError = password != confirmPassword,
-            label = { Text("Confirm Password") },
-            placeholder = { Text(text = "Re-enter password") },
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier
-                .width(300.dp)
-                .padding(bottom = 8.dp)
-                .clip(shape = RoundedCornerShape(15.dp, 15.dp, 15.dp, 15.dp))
-        )
+            // Email Text Field
+            TextField(
+                value = email,
+                onValueChange = {
+                    email = it
 
-        // Sign Up Button with validation check
-        Button(
-            onClick = {
-                if (isUsernameValid && isEmailValid && isPasswordValid) {
-                    viewModel.viewModelScope.launch {
-                        val hashedPassword = hashPassword(password)
-                        val user =
-                            Gamer(username = username, email = email, password = hashedPassword)
+                    if (!android.util.Patterns.EMAIL_ADDRESS.matcher(it).matches()) {
+                        message = "Invalid Email Format"
+                        isEmailValid = false
+                    } else {
+                        message = ""
+                        isEmailValid = true
+                    }
+                },
+                isError = !isEmailValid,
+                label = { Text("Email") },
+                placeholder = { Text(text = "Enter email") },
+                modifier = Modifier
+                    .width(300.dp)
+                    .padding(bottom = 8.dp)
+                    .clip(shape = RoundedCornerShape(15.dp, 15.dp, 15.dp, 15.dp))
+            )
 
-                        val isUsernameAvailable = viewModel.checkUsernameAvailability(username)
-                        val isEmailAvailable = viewModel.checkEmailAvailability(email)
+            // Password Text Field
+            TextField(
+                value = password,
+                onValueChange = {
+                    password = it
 
-                        if (isUsernameAvailable && isEmailAvailable) {
-                            viewModel.insertUser(user)
-                            navController.navigate(Screen.LoginScreen.route)
-                        } else {
-                            // Display appropriate error messages based on availability
-                            if (!isUsernameAvailable) {
-                                // Username already exists
+                    if (!checkPasswordValidity(it)) {
+                        message =
+                            "Ensure you have more than 8 characters with at least one lower-case, upper-case character, digits & special character"
+                        isPasswordValid = false
+                    } else {
+                        message = ""
+                        isPasswordValid = true
+                    }
+                },
+                isError = !isPasswordValid,
+                label = { Text("Password") },
+                placeholder = { Text(text = "Enter password") },
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier
+                    .width(300.dp)
+                    .padding(bottom = 8.dp)
+                    .clip(shape = RoundedCornerShape(15.dp, 15.dp, 15.dp, 15.dp))
+            )
+
+            // Confirm Password Text Field
+            TextField(
+                value = confirmPassword,
+                onValueChange = {
+                    confirmPassword = it
+                    if (password != confirmPassword) {
+                        message = "Passwords don't match"
+                        isConfirmPasswordValid = false
+                    } else {
+                        isConfirmPasswordValid = true
+                        message = ""
+                    }
+
+                },
+                isError = !isConfirmPasswordValid,
+                label = { Text("Confirm Password") },
+                placeholder = { Text(text = "Re-enter password") },
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier
+                    .width(300.dp)
+                    .padding(bottom = 8.dp)
+                    .clip(shape = RoundedCornerShape(15.dp, 15.dp, 15.dp, 15.dp))
+            )
+
+            // Sign Up Button with validation check
+            Button(
+                onClick = {
+                    if (isUsernameValid && isEmailValid && isPasswordValid && isConfirmPasswordValid) {
+                        viewModel.viewModelScope.launch {
+                            val hashedPassword = hashPassword(password)
+
+                            val userHashMap = HashMap<String, String>()
+                            userHashMap["username"] = username
+                            userHashMap["email"] = email
+                            userHashMap["password"] = hashedPassword
+
+                            // Username and email are available, proceed with registration using Retrofit
+                            val registrationResponse = authService.registerUser(userHashMap)
+
+                            val responseStatus = registrationResponse.body()?.status ?: "Unknown"
+                            val sessionToken = registrationResponse.body()?.session_token
+
+
+                            Log.d("Registration", "User registration successful?")
+                            Log.d("Registration", "Response status: $responseStatus")
+                            Log.d("Registration", "Session token: $sessionToken")
+
+                            if (registrationResponse.isSuccessful) {
+                                // Handle successful registration (navigate to login screen, etc.)
+                            } else {
+                                // Handle registration failure (display error message)
                             }
-                            if (!isEmailAvailable) {
-                                // Email already exists
-                            }
+
                         }
                     }
-                }
-            },
-            enabled = isUsernameValid && isEmailValid && isPasswordValid,
-            modifier = Modifier.padding(8.dp)
-        ) {
-            Text("Sign Up")
-        }
-
-        //Back Button to Login Screen
-        Button(
-            onClick = {
-                navController.navigate(Screen.LoginScreen.route)
+                },
+                enabled = isUsernameValid && isEmailValid && isPasswordValid && isConfirmPasswordValid,
+                modifier = Modifier.padding(8.dp)
+            ) {
+                Text("Sign Up")
             }
-        ) {
-            Text("Back")
+
+            //Back Button to Login Screen
+            Button(
+                onClick = {
+                    navController.navigate(Screen.LoginScreen.route)
+                }
+            ) {
+                Text("Back")
+            }
         }
     }
 }
 
-// Function to check password validity (example)
+// Function to check password validity
 fun checkPasswordValidity(password: String): Boolean {
     val hasUpperCase = password.any { it.isUpperCase() }
     val hasLowerCase = password.any { it.isLowerCase() }
@@ -165,23 +221,11 @@ fun checkPasswordValidity(password: String): Boolean {
     return password.length >= 8 && hasUpperCase && hasLowerCase && hasDigit && hasSymbol
 }
 
-// Function to hash password (replace with a secure hashing algorithm)
+// Function to hash password
 fun hashPassword(password: String): String {
-    // Implement a secure password hashing algorithm like bcrypt
-    return "hashed_password"
-}
+    // Generate a salt for bcrypt (the log rounds parameter is optional and can be adjusted)
+    val salt = BCrypt.gensalt()
 
-/*suspend fun isValidEmail(email: String,  viewModel: GamerViewModel): ValidationResult {
-    val emailRegex = Regex("^[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+$")
-    if (!email.matches(emailRegex)) {
-        return ValidationResult.Invalid("Invalid email format")
-    }
-
-    val isEmailUnique = viewModel.isEmailUnique(email)
-    return if (!isEmailUnique) {
-        ValidationResult.Invalid("Email already exists")
-    } else {
-        ValidationResult.Valid
-    }
+    // Hash the password with the generated salt
+    return BCrypt.hashpw(password, salt)
 }
-*/
