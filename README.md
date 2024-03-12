@@ -15,3 +15,4 @@ Spyware Mobile Application made for University Project.
   - **API Service**; NodeJS, with Fastify for API Route handling.
   - **ORM Model**; Prisma
   - **Database**; PostgreSQL
+test
