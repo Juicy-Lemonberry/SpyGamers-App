@@ -1,0 +1,15 @@
+package com.example.spygamers
+
+import android.app.Application
+import android.content.Context
+import androidx.datastore.preferences.preferencesDataStore
+import kotlinx.coroutines.GlobalScope
+
+class GamerApp : Application(){
+    val GamerDao by lazy {GamerDatabase.getDatabase(this, GlobalScope).gamerDao()}
+    val Context.dataStore by preferencesDataStore(
+        name = "GridPreference"
+    )
+    val repository by lazy { GamerRepository(GamerDao, dataStore) }
+
+}
