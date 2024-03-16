@@ -3,6 +3,7 @@ package com.example.spygamers
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.POST
+import retrofit2.http.PUT
 
 data class RetrofitResponse(
     val status: String,
@@ -28,6 +29,12 @@ data class GetDM(
     val target_account_id: Int
 )
 
+data class newUsername(
+    val auth_token: String,
+    val new_username: String
+)
+
+
 interface AuthenticationService {
     @POST("http://spygamers.servehttp.com:44414/app-api/account/register")
     suspend fun registerUser(
@@ -43,5 +50,11 @@ interface AuthenticationService {
     suspend fun getDM(
         @Body user: GetDM
     ): Response<RetrofitResponse>
+
+    @PUT("http://spygamers.servehttp.com:44414/app-api/account/change-username")
+    suspend fun changeUsername(
+        @Body user: newUsername
+    ): Response<RetrofitResponse>
+
 }
 

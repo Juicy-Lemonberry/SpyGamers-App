@@ -1,5 +1,6 @@
 package com.example.spygamers
 
+import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.provider.MediaStore
 import android.util.Log
@@ -55,20 +56,19 @@ fun SettingScreen(
 ) {
     val context = LocalContext.current
 
-    var timezone by remember { mutableStateOf("") }
+    var timezone = viewModel.getTimezoneCode()
     var gameName by remember { mutableStateOf("") }
     var profilePicture by remember { mutableStateOf<ImageBitmap?>(null) }
-    var username by remember { mutableStateOf("") }
+    var username = viewModel.getUsername()
+    var sessionToken = viewModel.getSessionToken()
 
-    var timezoneCode = viewModel.getTimezoneCode()
-    var accountID = viewModel.getAccountID()
-
-    val launcher = rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri ->
-        if (uri != null) {
-            val bitmap = MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
-            profilePicture = bitmap.asImageBitmap()
+    val launcher =
+        rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri ->
+            if (uri != null) {
+                val bitmap = MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
+                profilePicture = bitmap.asImageBitmap()
+            }
         }
-    }
 
     Box(
         modifier = Modifier
@@ -88,29 +88,15 @@ fun SettingScreen(
                 modifier = Modifier.padding(bottom = 16.dp),
             )
 
-            if (timezoneCode != null) {
-                Text(
-                    text = timezoneCode,
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(bottom = 16.dp),
-                )
-            }
-
-            if (accountID != null) {
-                Text(
-                    text = accountID.toString(),
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(bottom = 16.dp),
-                )
-            }
-
             // Editable field for changing timezone
-            TextField(
-                value = timezone,
-                onValueChange = { timezone = it },
-                label = { Text("Timezone") },
-                modifier = Modifier.width(225.dp)
-            )
+            timezone?.let {
+                TextField(
+                    value = it,
+                    onValueChange = { timezone = it },
+                    label = { Text("Timezone") },
+                    modifier = Modifier.width(225.dp)
+                )
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -125,12 +111,14 @@ fun SettingScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Editable field for changing username
-            TextField(
-                value = username,
-                onValueChange = { username = it },
-                label = { Text("Username") },
-                modifier = Modifier.width(225.dp)
-            )
+            username?.let {
+                TextField(
+                    value = it,
+                    onValueChange = { username = it },
+                    label = { Text("Username") },
+                    modifier = Modifier.width(225.dp)
+                )
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -159,9 +147,25 @@ fun SettingScreen(
 
             // Button to save settings
             Button(onClick = {
+                viewModel.viewModelScope.launch {
+                    val newUserName = sessionToken?.let { username?.let { it1 -> newUsername(it, it1) } }
 
+                    val retrofit = Retrofit.Builder()
+                        .baseUrl("http://spygamers.servehttp.com:44414/app-api/")
+                        .addConverterFactory(GsonConverterFactory.create())
+                        .build()
 
-                navController.navigate(Screen.SettingScreen.route)
+                    val authService = retrofit.create(AuthenticationService::class.java)
+
+                    val retrofitResponse = newUserName?.let { authService.changeUsername(it) }
+
+                    if (retrofitResponse != null) {
+                        if (retrofitResponse.isSuccessful) {
+
+                            navController.navigate(Screen.SettingScreen.route)
+                        }
+                    }
+                }
             }) {
                 Text("Save")
             }

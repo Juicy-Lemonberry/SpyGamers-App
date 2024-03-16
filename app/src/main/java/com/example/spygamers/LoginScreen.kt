@@ -107,7 +107,7 @@ fun LoginScreen(
 
                     Log.d("Login", "SessionToken: $sessionToken")
 
-                    var gamer = Gamer(sessionToken, accountID, timezone_code)
+                    var gamer = Gamer(sessionToken, accountID, timezone_code, username)
 
                     if (retrofitResponse.isSuccessful) {
                         viewModel.insertOrUpdateGamer(gamer)

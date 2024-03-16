@@ -13,11 +13,10 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
 class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel() {
-
     private var _sessionToken: String? = null
     private var _accountID: Int? = null
     private var _timezoneCode: String? = null
-
+    private var _Username: String? = null
 
     fun insertOrUpdateGamer(gamer: Gamer) {
         viewModelScope.launch {
@@ -26,7 +25,7 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
     }
     fun getSessionToken(): String? {
         viewModelScope.launch {
-            _sessionToken = gamerRepository.getSessionToken().toString()
+            _sessionToken = gamerRepository.getSessionToken().firstOrNull()
         }
         return _sessionToken
     }
@@ -40,9 +39,16 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
 
     fun getTimezoneCode(): String? {
         viewModelScope.launch {
-            _timezoneCode = gamerRepository.getTimezoneCode().toString()
+            _timezoneCode = gamerRepository.getTimezoneCode().firstOrNull()
         }
         return _timezoneCode
+    }
+
+    fun getUsername(): String? {
+        viewModelScope.launch {
+            _Username = gamerRepository.getUsername().firstOrNull()
+        }
+        return _Username
     }
 
     class GamerViewModelFactory(private val repository: GamerRepository) : ViewModelProvider.Factory {

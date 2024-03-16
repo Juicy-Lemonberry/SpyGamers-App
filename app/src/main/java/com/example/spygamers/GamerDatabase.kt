@@ -6,7 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import kotlinx.coroutines.CoroutineScope
 
-@Database(entities = [Gamer::class], version = 1)
+@Database(entities = [Gamer::class], version = 3)
 abstract class GamerDatabase : RoomDatabase() {
     abstract fun gamerDao(): GamerDao
 
@@ -20,7 +20,8 @@ abstract class GamerDatabase : RoomDatabase() {
                     context.applicationContext,
                     GamerDatabase::class.java,
                     "GamerDatabase"
-                ).build()
+                ).fallbackToDestructiveMigration()
+                .build()
                 INSTANCE = instance
                 instance
             }

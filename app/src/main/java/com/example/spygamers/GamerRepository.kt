@@ -25,4 +25,9 @@ class GamerRepository(private val gamerDao: GamerDao, private val dataStore: Dat
     fun getTimezoneCode(): Flow<String?> {
         return gamerDao.getTimezoneCode()
     }
+
+    // Function to get the username from the local database
+    fun getUsername(): Flow<String?> {
+        return gamerDao.getUsername()
+    }
 }

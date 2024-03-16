@@ -25,4 +25,8 @@ interface GamerDao {
     // Retrieve the timezone code
     @Query("SELECT timezoneCode FROM userInfo LIMIT 1")
     fun getTimezoneCode(): Flow<String?>
+
+    // Retrieve the username
+    @Query("SELECT username FROM userInfo LIMIT 1")
+    fun getUsername(): Flow<String?>
 }
