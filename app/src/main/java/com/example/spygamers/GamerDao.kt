@@ -6,25 +6,15 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface GamerDao {
-
+    // Insert or update the session token
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertUser(gamer: Gamer)
+    suspend fun insertOrUpdateSessionToken(gamer: Gamer)
 
-    @Delete
-    suspend fun deleteUser(gamer: Gamer)
-
-    @Update
-    suspend fun updateUser(gamer: Gamer)
-
-    @Query("SELECT * FROM users")
-    suspend fun getAllUsers(): List<Gamer>
-
-    @Query("SELECT EXISTS(SELECT * FROM users WHERE username = :username)")
-    suspend fun usernameExists(username: String): Boolean
-
-    @Query("SELECT EXISTS(SELECT * FROM users WHERE email = :email)")
-    suspend fun emailExists(email: String): Boolean
+    // Get the session token from the local database
+    @Query("SELECT sessionToken FROM session_token LIMIT 1")
+    fun getSessionToken(): Flow<String?>
 }

@@ -20,7 +20,7 @@ fun NavGraph(
         startDestination = Screen.LoginScreen.route
     ) {
         composable(route = "Login_Screen") {
-            LoginScreen(navController = navController)
+            LoginScreen(navController = navController, viewModel)
         }
         composable(route = "Register_Screen") {
             RegisterScreen(navController = navController, viewModel)

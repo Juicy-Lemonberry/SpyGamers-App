@@ -28,7 +28,6 @@ import org.json.JSONObject
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-
 @Composable
 fun RegisterScreen(
     navController: NavController,
@@ -166,7 +165,7 @@ fun RegisterScreen(
             Button(
                 onClick = {
                     if (isUsernameValid && isEmailValid && isPasswordValid && isConfirmPasswordValid) {
-                        val user = User(username, password, email)
+                        val user = UserRegistration(username, password, email)
 
                         viewModel.viewModelScope.launch {
                             val retrofit = Retrofit.Builder()

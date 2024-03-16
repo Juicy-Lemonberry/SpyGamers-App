@@ -1,5 +1,6 @@
 package com.example.spygamers
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,12 +24,21 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
+import kotlinx.coroutines.launch
+import org.json.JSONObject
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
 @Composable
-fun LoginScreen(navController: NavController) {
+fun LoginScreen(
+    navController: NavController,
+    viewModel: GamerViewModel
+) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var message by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
@@ -42,6 +52,11 @@ fun LoginScreen(navController: NavController) {
             text = "Gamers",
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding(bottom = 16.dp)
+        )
+
+        Text(
+            text = message,
+            modifier = Modifier.padding(bottom = 10.dp)
         )
 
         // Username Text Field
@@ -68,14 +83,41 @@ fun LoginScreen(navController: NavController) {
                 .clip(shape = RoundedCornerShape(15.dp, 15.dp, 15.dp, 15.dp)),
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(onDone = { /* Close keyboard on Done */ })
+            keyboardActions = KeyboardActions(onDone = {})
         )
 
         // Login Button
         Button(
             onClick = {
-                // For now, navigate to a placeholder screen
-                navController.navigate("placeholder")
+                viewModel.viewModelScope.launch {
+                    val userCredentials = UserLogin(username, password)
+
+                    val retrofit = Retrofit.Builder()
+                        .baseUrl("http://spygamers.servehttp.com:44414/app-api/")
+                        .addConverterFactory(GsonConverterFactory.create())
+                        .build()
+
+                    val authService = retrofit.create(AuthenticationService::class.java)
+
+                    val retrofitResponse = authService.userLogin(userCredentials)
+                    val errorBody = retrofitResponse.errorBody()?.string()
+                    val sessionToken = retrofitResponse.body()?.session_token ?: "Unknown"
+
+                    Log.d("Login", "SessionToken: $sessionToken")
+
+                    if (retrofitResponse.isSuccessful) {
+                        viewModel.insertOrUpdateSessionToken(sessionToken)
+
+                        navController.navigate(Screen.LoginScreen.route)// to replace
+                    } else {
+                        if (errorBody != null) {
+                            val parsedError = JSONObject(errorBody)
+                            val errorMessage = parsedError.getString("status")
+
+                            message = errorMessage
+                        }
+                    }
+                }
             },
             enabled = username.isNotBlank() && password.isNotBlank(),
             modifier = Modifier
