@@ -24,9 +24,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
-import com.example.spygamers.RetrofitClient.authService
+import com.google.gson.Gson
+
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 import org.mindrot.jbcrypt.BCrypt
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
 
 @Composable
@@ -167,30 +171,39 @@ fun RegisterScreen(
                 onClick = {
                     if (isUsernameValid && isEmailValid && isPasswordValid && isConfirmPasswordValid) {
                         viewModel.viewModelScope.launch {
-                            val hashedPassword = hashPassword(password)
+                            val gson = Gson()
 
-                            val userHashMap = HashMap<String, String>()
-                            userHashMap["username"] = username
-                            userHashMap["email"] = email
-                            userHashMap["password"] = hashedPassword
+                            val retrofit = Retrofit.Builder()
+                                .baseUrl("http://spygamers.servehttp.com:44414/app-api/")
+                                .addConverterFactory(GsonConverterFactory.create())
+                                .build()
 
-                            // Username and email are available, proceed with registration using Retrofit
-                            val registrationResponse = authService.registerUser(userHashMap)
+                            val authService = retrofit.create(AuthenticationService::class.java)
 
-                            val responseStatus = registrationResponse.body()?.status ?: "Unknown"
-                            val sessionToken = registrationResponse.body()?.session_token
+                            val user = User(username, password, email)
 
+                            val retrofitResponse = authService.registerUser(user)
 
-                            Log.d("Registration", "User registration successful?")
+                            val responseStatus = retrofitResponse.body()?.status ?: "Unknown"
+                            val sessionToken = retrofitResponse.body()?.session_token
+                            val errorBody = retrofitResponse.errorBody()?.string()
+
+                            Log.e("Registration", "Error response body: $errorBody")
+                            Log.d("Registration", user.toString())
+                            Log.d("Registration", retrofitResponse.toString())
                             Log.d("Registration", "Response status: $responseStatus")
                             Log.d("Registration", "Session token: $sessionToken")
 
-                            if (registrationResponse.isSuccessful) {
-                                // Handle successful registration (navigate to login screen, etc.)
+                            if (retrofitResponse.isSuccessful) {
+                                navController.navigate(Screen.LoginScreen.route)
                             } else {
-                                // Handle registration failure (display error message)
-                            }
+                                if (errorBody != null) {
+                                    val parsedError = JSONObject(errorBody)
+                                    val errorMessage = parsedError.getString("status")
 
+                                    message = errorMessage
+                                }
+                            }
                         }
                     }
                 },
@@ -219,13 +232,4 @@ fun checkPasswordValidity(password: String): Boolean {
     val hasDigit = password.any { it.isDigit() }
     val hasSymbol = password.any { !it.isLetterOrDigit() }
     return password.length >= 8 && hasUpperCase && hasLowerCase && hasDigit && hasSymbol
-}
-
-// Function to hash password
-fun hashPassword(password: String): String {
-    // Generate a salt for bcrypt (the log rounds parameter is optional and can be adjusted)
-    val salt = BCrypt.gensalt()
-
-    // Hash the password with the generated salt
-    return BCrypt.hashpw(password, salt)
 }
