@@ -20,6 +20,11 @@ data class UserLogin(
     val password: String
 )
 
+data class GetDM(
+    val auth_token: String,
+    val target_account_id: Int
+)
+
 interface AuthenticationService {
     @POST("http://spygamers.servehttp.com:44414/app-api/account/register")
     suspend fun registerUser(
@@ -30,5 +35,9 @@ interface AuthenticationService {
     suspend fun userLogin(
         @Body user: UserLogin
     ): Response<RetrofitResponse>
-}
 
+    @POST("http://spygamers.servehttp.com:44414/app-api/account/get-direct-messages")
+    suspend fun getDM(
+        @Body user: GetDM
+    ): Response<RetrofitResponse>
+}

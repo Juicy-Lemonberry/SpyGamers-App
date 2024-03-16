@@ -108,7 +108,7 @@ fun LoginScreen(
                     if (retrofitResponse.isSuccessful) {
                         viewModel.insertOrUpdateSessionToken(sessionToken)
 
-                        navController.navigate(Screen.LoginScreen.route)// to replace
+                        navController.navigate(Screen.HomeScreen.route)// to replace
                     } else {
                         if (errorBody != null) {
                             val parsedError = JSONObject(errorBody)

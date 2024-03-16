@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 sealed class Screen(val route: String) {
     object LoginScreen : Screen(route = "Login_Screen")
     object RegisterScreen : Screen(route = "Register_Screen")
+    object HomeScreen : Screen(route = "Home_Screen")
 }
 
 @Composable
@@ -24,6 +25,9 @@ fun NavGraph(
         }
         composable(route = "Register_Screen") {
             RegisterScreen(navController = navController, viewModel)
+        }
+        composable(route = "Home_Screen") {
+            HomeScreen(navController = navController, viewModel)
         }
     }
 }
