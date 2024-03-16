@@ -102,13 +102,17 @@ fun LoginScreen(
                     val retrofitResponse = authService.userLogin(userCredentials)
                     val errorBody = retrofitResponse.errorBody()?.string()
                     val sessionToken = retrofitResponse.body()?.session_token ?: "Unknown"
+                    val accountID = retrofitResponse.body()?.account_id ?: -1
+                    val timezone_code = retrofitResponse.body()?.timezone_code ?: "Unknown"
 
                     Log.d("Login", "SessionToken: $sessionToken")
 
-                    if (retrofitResponse.isSuccessful) {
-                        viewModel.insertOrUpdateSessionToken(sessionToken)
+                    var gamer = Gamer(sessionToken, accountID, timezone_code)
 
-                        navController.navigate(Screen.HomeScreen.route)// to replace
+                    if (retrofitResponse.isSuccessful) {
+                        viewModel.insertOrUpdateGamer(gamer)
+
+                        navController.navigate(Screen.SettingScreen.route)
                     } else {
                         if (errorBody != null) {
                             val parsedError = JSONObject(errorBody)

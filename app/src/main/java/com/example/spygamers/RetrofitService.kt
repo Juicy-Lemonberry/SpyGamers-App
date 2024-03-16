@@ -6,7 +6,9 @@ import retrofit2.http.POST
 
 data class RetrofitResponse(
     val status: String,
-    val session_token: String? = null
+    val session_token: String? = null,
+    val account_id: Int? = null,
+    val timezone_code: String? = null
 )
 
 data class UserRegistration(
@@ -18,6 +20,7 @@ data class UserRegistration(
 data class UserLogin(
     val username: String,
     val password: String
+
 )
 
 data class GetDM(
@@ -41,3 +44,4 @@ interface AuthenticationService {
         @Body user: GetDM
     ): Response<RetrofitResponse>
 }
+

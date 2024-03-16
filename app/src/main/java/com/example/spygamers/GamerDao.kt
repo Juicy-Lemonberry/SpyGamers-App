@@ -10,11 +10,19 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface GamerDao {
-    // Insert or update the session token
+    // Insert or update the entire Gamer data
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertOrUpdateSessionToken(gamer: Gamer)
+    suspend fun insertOrUpdateGamer(gamer: Gamer)
 
-    // Get the session token from the local database
-    @Query("SELECT sessionToken FROM session_token LIMIT 1")
+    // Retrieve the account ID
+    @Query("SELECT accountID FROM userInfo LIMIT 1")
+    fun getAccountId(): Flow<Int?>
+
+    // Retrieve the session token
+    @Query("SELECT sessionToken FROM userInfo LIMIT 1")
     fun getSessionToken(): Flow<String?>
+
+    // Retrieve the timezone code
+    @Query("SELECT timezoneCode FROM userInfo LIMIT 1")
+    fun getTimezoneCode(): Flow<String?>
 }
