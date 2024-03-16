@@ -1,6 +1,5 @@
 package com.example.spygamers
 
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,11 +23,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
-
 import kotlinx.coroutines.launch
 import org.json.JSONObject
-import org.mindrot.jbcrypt.BCrypt
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
@@ -170,9 +166,9 @@ fun RegisterScreen(
             Button(
                 onClick = {
                     if (isUsernameValid && isEmailValid && isPasswordValid && isConfirmPasswordValid) {
-                        viewModel.viewModelScope.launch {
-                            val gson = Gson()
+                        val user = User(username, password, email)
 
+                        viewModel.viewModelScope.launch {
                             val retrofit = Retrofit.Builder()
                                 .baseUrl("http://spygamers.servehttp.com:44414/app-api/")
                                 .addConverterFactory(GsonConverterFactory.create())
@@ -180,19 +176,17 @@ fun RegisterScreen(
 
                             val authService = retrofit.create(AuthenticationService::class.java)
 
-                            val user = User(username, password, email)
-
                             val retrofitResponse = authService.registerUser(user)
 
-                            val responseStatus = retrofitResponse.body()?.status ?: "Unknown"
-                            val sessionToken = retrofitResponse.body()?.session_token
+                            //val responseStatus = retrofitResponse.body()?.status ?: "Unknown"
+                            //val sessionToken = retrofitResponse.body()?.session_token
                             val errorBody = retrofitResponse.errorBody()?.string()
 
-                            Log.e("Registration", "Error response body: $errorBody")
-                            Log.d("Registration", user.toString())
-                            Log.d("Registration", retrofitResponse.toString())
-                            Log.d("Registration", "Response status: $responseStatus")
-                            Log.d("Registration", "Session token: $sessionToken")
+                            //Log.e("Registration", "Error response body: $errorBody")
+                            //Log.d("Registration", user.toString())
+                            //Log.d("Registration", retrofitResponse.toString())
+                            //Log.d("Registration", "Response status: $responseStatus")
+                            //Log.d("Registration", "Session token: $sessionToken")
 
                             if (retrofitResponse.isSuccessful) {
                                 navController.navigate(Screen.LoginScreen.route)
