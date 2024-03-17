@@ -60,6 +60,11 @@ data class getFriend(
     val auth_token: String,
 )
 
+data class removeFriend(
+    val target_account_id: Int,
+    val auth_token: String
+)
+
 data class Friend(
     val account_id: Int,
     val username: String,
@@ -87,10 +92,18 @@ interface AuthenticationService {
         @Body user: newUsername
     ): Response<RetrofitResponse>
 
+}
+interface FriendService {
     //Friend List Stuff
     @POST("http://spygamers.servehttp.com:44414/app-api/account/get-friends")
     suspend fun getFriends(
         @Body user: getFriend
     ): Response<Friends>
+
+    @PUT("http://spygamers.servehttp.com:44414/app-api/account/remove-friend")
+    suspend fun removeFriends(
+        @Body user: removeFriend
+    ): Response<RetrofitResponse>
 }
+
 
