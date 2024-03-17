@@ -1,4 +1,4 @@
-package com.example.spygamers
+package com.example.spygamers.screens
 
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
@@ -9,10 +9,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
+import androidx.compose.material.Button
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
+import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -26,6 +26,11 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
+import com.example.spygamers.services.AuthenticationService
+import com.example.spygamers.db.schemas.Gamer
+import com.example.spygamers.controllers.GamerViewModel
+import com.example.spygamers.Screen
+import com.example.spygamers.services.UserLogin
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 import retrofit2.Retrofit
@@ -50,7 +55,7 @@ fun LoginScreen(
         // Title Text
         Text(
             text = "Gamers",
-            style = MaterialTheme.typography.titleLarge,
+            style = MaterialTheme.typography.h2,
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
@@ -103,11 +108,10 @@ fun LoginScreen(
                     val errorBody = retrofitResponse.errorBody()?.string()
                     val sessionToken = retrofitResponse.body()?.session_token ?: "Unknown"
                     val accountID = retrofitResponse.body()?.account_id ?: -1
-                    val timezone_code = retrofitResponse.body()?.timezone_code ?: "Unknown"
 
                     Log.d("Login", "SessionToken: $sessionToken")
 
-                    var gamer = Gamer(sessionToken, accountID, timezone_code, username)
+                    val gamer = Gamer(sessionToken, accountID)
 
                     if (retrofitResponse.isSuccessful) {
                         viewModel.insertOrUpdateGamer(gamer)

@@ -1,7 +1,8 @@
-package com.example.spygamers
+package com.example.spygamers.db
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import com.example.spygamers.db.schemas.Gamer
 import kotlinx.coroutines.flow.Flow
 
 class GamerRepository(private val gamerDao: GamerDao, private val dataStore: DataStore<Preferences>) {
@@ -19,15 +20,5 @@ class GamerRepository(private val gamerDao: GamerDao, private val dataStore: Dat
     // Function to get the account ID from the local database
     fun getAccountId(): Flow<Int?> {
         return gamerDao.getAccountId()
-    }
-
-    // Function to get the timezone code from the local database
-    fun getTimezoneCode(): Flow<String?> {
-        return gamerDao.getTimezoneCode()
-    }
-
-    // Function to get the username from the local database
-    fun getUsername(): Flow<String?> {
-        return gamerDao.getUsername()
     }
 }

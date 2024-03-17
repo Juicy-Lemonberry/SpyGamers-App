@@ -1,4 +1,4 @@
-package com.example.spygamers
+package com.example.spygamers.services
 
 import retrofit2.Response
 import retrofit2.http.Body
@@ -24,13 +24,13 @@ data class UserLogin(
 
 )
 
-data class getRecomendation(
+data class GetRecommendationBody(
     val auth_token: String,
     val sort_by: String = "DEFAULT",
     val chunk_size: Int = 10
 )
 
-data class result(
+data class RecommendedFriend(
     val id : String,
     val username: String,
     val game_preference_weightage: Int,
@@ -40,27 +40,27 @@ data class result(
 
 data class Recommendations(
     val status: String,
-    val result: List<result>
+    val result: List<RecommendedFriend>
 )
 
 interface RecommendationService {
     //Reco List Stuff
     @POST("http://spygamers.servehttp.com:44414/app-api/recommend/friends")
     suspend fun getRecommendations(
-        @Body user: getRecomendation
+        @Body user: GetRecommendationBody
     ): Response<Recommendations>
 }
 
-data class newUsername(
+data class ChangeUsernameBody(
     val auth_token: String,
     val new_username: String
 )
 
-data class getFriend(
+data class GetFriendsBody(
     val auth_token: String,
 )
 
-data class removeFriend(
+data class RemoveFriendBody(
     val target_account_id: Int,
     val auth_token: String
 )
@@ -89,7 +89,7 @@ interface AuthenticationService {
 
     @PUT("http://spygamers.servehttp.com:44414/app-api/account/change-username")
     suspend fun changeUsername(
-        @Body user: newUsername
+        @Body user: ChangeUsernameBody
     ): Response<RetrofitResponse>
 
 }
@@ -97,12 +97,12 @@ interface FriendService {
     //Friend List Stuff
     @POST("http://spygamers.servehttp.com:44414/app-api/account/get-friends")
     suspend fun getFriends(
-        @Body user: getFriend
+        @Body user: GetFriendsBody
     ): Response<Friends>
 
     @PUT("http://spygamers.servehttp.com:44414/app-api/account/remove-friend")
     suspend fun removeFriends(
-        @Body user: removeFriend
+        @Body user: RemoveFriendBody
     ): Response<RetrofitResponse>
 }
 

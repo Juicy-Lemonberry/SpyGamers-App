@@ -1,9 +1,7 @@
-package com.example.spygamers
+package com.example.spygamers.screens
 
 import android.annotation.SuppressLint
-import android.graphics.Bitmap
 import android.provider.MediaStore
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,54 +12,87 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
-import androidx.navigation.compose.NavHost
 import kotlinx.coroutines.launch
-import org.json.JSONObject
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import kotlinx.coroutines.launch
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.layout.Box
+import androidx.compose.material.Button
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
+import androidx.compose.material.TextField
+import androidx.compose.material.rememberScaffoldState
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
+import com.example.spygamers.services.AuthenticationService
+import com.example.spygamers.controllers.GamerViewModel
+import com.example.spygamers.Screen
+import com.example.spygamers.components.AppBar
+import com.example.spygamers.components.DrawerBody
+import com.example.spygamers.components.DrawerHeader
+import com.example.spygamers.services.ChangeUsernameBody
+import com.example.spygamers.utils.generateDefaultDrawerItems
+import com.example.spygamers.utils.handleDrawerItemClicked
 
+@SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
 fun SettingScreen(
     navController: NavController,
     viewModel: GamerViewModel
 ) {
-    val context = LocalContext.current
+    val scaffoldState = rememberScaffoldState()
+    val scope = rememberCoroutineScope()
 
-    var timezone = viewModel.getTimezoneCode()
-    var gameName by remember { mutableStateOf("") }
-    var profilePicture by remember { mutableStateOf<ImageBitmap?>(null) }
+    Scaffold(
+        scaffoldState = scaffoldState,
+        topBar = {
+            AppBar(
+                onNavigationIconClick = {
+                    scope.launch {
+                        scaffoldState.drawerState.open()
+                    }
+                }
+            )
+        },
+        drawerGesturesEnabled = scaffoldState.drawerState.isOpen,
+        drawerContent = {
+            DrawerHeader()
+            DrawerBody(
+                items = generateDefaultDrawerItems(),
+                onItemClick = {item ->
+                    handleDrawerItemClicked(item, Screen.SettingScreen, navController)
+                }
+            )
+        }
+    ) {
+        MainBody(viewModel, navController);
+    }
+}
+
+@Composable
+private fun MainBody(viewModel: GamerViewModel, navController: NavController){
+    var gameName by rememberSaveable { mutableStateOf("") }
+    var profilePicture by rememberSaveable { mutableStateOf<ImageBitmap?>(null) }
     var username = viewModel.getUsername()
     var sessionToken = viewModel.getSessionToken()
 
+    // TODO: Load profile picture from backend server instead...
+    val context = LocalContext.current
     val launcher =
         rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri ->
             if (uri != null) {
@@ -84,10 +115,12 @@ fun SettingScreen(
         ) {
             Text(
                 text = "Settings",
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.h2,
                 modifier = Modifier.padding(bottom = 16.dp),
             )
 
+            /*
+            // TODO: Load dynamically from server instead...
             // Editable field for changing timezone
             timezone?.let {
                 TextField(
@@ -97,6 +130,8 @@ fun SettingScreen(
                     modifier = Modifier.width(225.dp)
                 )
             }
+            *
+             */
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -148,7 +183,7 @@ fun SettingScreen(
             // Button to save settings
             Button(onClick = {
                 viewModel.viewModelScope.launch {
-                    val newUserName = sessionToken?.let { username?.let { it1 -> newUsername(it, it1) } }
+                    val newUserName = sessionToken?.let { username?.let { it1 -> ChangeUsernameBody(it, it1) } }
 
                     val retrofit = Retrofit.Builder()
                         .baseUrl("http://spygamers.servehttp.com:44414/app-api/")

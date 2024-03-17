@@ -1,9 +1,17 @@
 package com.example.spygamers
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.spygamers.controllers.GamerViewModel
+import com.example.spygamers.screens.FriendListScreen
+import com.example.spygamers.screens.FriendRecommendationScreen
+import com.example.spygamers.screens.HomeScreen
+import com.example.spygamers.screens.LoginScreen
+import com.example.spygamers.screens.RegisterScreen
+import com.example.spygamers.screens.SettingScreen
 
 sealed class Screen(val route: String) {
     object LoginScreen : Screen(route = "Login_Screen")
@@ -12,6 +20,10 @@ sealed class Screen(val route: String) {
     object FriendListScreen : Screen(route = "FriendList_Screen")
     object HomeScreen : Screen(route = "Home_Screen")
     object FriendRecommendationScreen : Screen(route = "FriendRecommendation_Screen")
+
+    object GroupRecommendationScreen : Screen(route = "GroupRecommendation_Screen")
+    object ViewProfileScreen : Screen(route = "ViewProfile_Screen")
+    object CreateGroupScreen : Screen(route = "CreateGroup_Screen")
 }
 
 @Composable

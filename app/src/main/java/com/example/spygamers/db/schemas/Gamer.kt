@@ -1,4 +1,4 @@
-package com.example.spygamers
+package com.example.spygamers.db.schemas
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
@@ -8,6 +8,4 @@ import androidx.room.PrimaryKey
 data class Gamer(
     @PrimaryKey val sessionToken: String,
     @ColumnInfo(name = "accountID") val accountID: Int,
-    @ColumnInfo(name = "timezoneCode") val timezoneCode: String,
-    @ColumnInfo(name = "username") val username: String
 )

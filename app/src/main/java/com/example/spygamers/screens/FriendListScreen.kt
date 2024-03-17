@@ -1,59 +1,99 @@
-package com.example.spygamers
+package com.example.spygamers.screens
 
-import android.app.Activity
+import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
+import com.example.spygamers.services.Friend
+import com.example.spygamers.services.FriendService
+import com.example.spygamers.controllers.GamerViewModel
+import com.example.spygamers.R
+import com.example.spygamers.Screen
+import com.example.spygamers.components.AppBar
+import com.example.spygamers.components.DrawerBody
+import com.example.spygamers.components.DrawerHeader
+import com.example.spygamers.services.GetFriendsBody
+import com.example.spygamers.services.RemoveFriendBody
+import com.example.spygamers.utils.generateDefaultDrawerItems
+import com.example.spygamers.utils.handleDrawerItemClicked
 import kotlinx.coroutines.launch
-import org.json.JSONObject
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
+@SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
 fun FriendListScreen(
     navController: NavController,
     viewModel: GamerViewModel
 ) {
+    val scaffoldState = rememberScaffoldState()
+    val scope = rememberCoroutineScope()
 
-    var auth_token by remember { mutableStateOf("") }
+    Scaffold(
+        scaffoldState = scaffoldState,
+        topBar = {
+            AppBar(
+                onNavigationIconClick = {
+                    scope.launch {
+                        scaffoldState.drawerState.open()
+                    }
+                }
+            )
+        },
+        drawerGesturesEnabled = scaffoldState.drawerState.isOpen,
+        drawerContent = {
+            DrawerHeader()
+            DrawerBody(
+                items = generateDefaultDrawerItems(),
+                onItemClick = {item ->
+                    handleDrawerItemClicked(item, Screen.FriendListScreen, navController)
+                }
+            )
+        }
+    ) {
+        MainBody(navController, viewModel);
+    }
+}
+
+@Composable
+private fun MainBody(
+    navController: NavController,
+    viewModel: GamerViewModel
+) {
+    var auth_token by rememberSaveable { mutableStateOf("") }
 
     auth_token = viewModel.getSessionToken().toString()
 
-    var friends by remember { mutableStateOf<List<Friend>>(emptyList()) }
-    var incomingRequests by remember { mutableStateOf<List<Friend>>(emptyList()) }
-    var outgoingRequests by remember { mutableStateOf<List<Friend>>(emptyList()) }
-    var acceptedFriends by remember { mutableStateOf<List<Friend>>(emptyList()) }
+    var friends by rememberSaveable { mutableStateOf<List<Friend>>(emptyList()) }
+    var incomingRequests by rememberSaveable { mutableStateOf<List<Friend>>(emptyList()) }
+    var outgoingRequests by rememberSaveable { mutableStateOf<List<Friend>>(emptyList()) }
+    var acceptedFriends by rememberSaveable { mutableStateOf<List<Friend>>(emptyList()) }
 
     LaunchedEffect(Unit) {
         viewModel.viewModelScope.launch {
@@ -65,7 +105,7 @@ fun FriendListScreen(
 
             val service = retrofit.create(FriendService::class.java)
 
-            val response = service.getFriends(getFriend(auth_token))
+            val response = service.getFriends(GetFriendsBody(auth_token))
             if (response.isSuccessful) {
                 friends = response.body()?.friends ?: emptyList()
                 incomingRequests = friends.filter { it.status == "INCOMING_REQUEST" }
@@ -82,8 +122,6 @@ fun FriendListScreen(
         modifier = Modifier
             .fillMaxSize()
     ) {
-        FriendListAppBar(navController)
-
         fun removeIncomingRequest(idToRemove: Int) {
             incomingRequests = incomingRequests.filter { it.account_id != idToRemove }
         }
@@ -106,7 +144,7 @@ fun FriendListScreen(
                 ) {
                     Text(
                         text = "Incoming Requests",
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MaterialTheme.typography.h2,
                         color = Color.White,
                         modifier = Modifier.fillMaxSize()
                     )
@@ -186,7 +224,7 @@ fun FriendListScreen(
                                     val service = retrofit.create(FriendService::class.java)
 
                                     val response = service.removeFriends(
-                                        removeFriend(
+                                        RemoveFriendBody(
                                             friend.account_id,
                                             auth_token
                                         )
@@ -228,7 +266,7 @@ fun FriendListScreen(
                 ) {
                     Text(
                         text = "Outgoing Requests",
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MaterialTheme.typography.h2,
                         color = Color.White,
                         modifier = Modifier.fillMaxSize()
                     )
@@ -291,7 +329,7 @@ fun FriendListScreen(
                                     val service = retrofit.create(FriendService::class.java)
 
                                     val response = service.removeFriends(
-                                        removeFriend(
+                                        RemoveFriendBody(
                                             friend.account_id,
                                             auth_token
                                         )
@@ -332,7 +370,7 @@ fun FriendListScreen(
                 ) {
                     Text(
                         text = "Friends",
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MaterialTheme.typography.h2,
                         color = Color.White,
                         modifier = Modifier.fillMaxSize()
                     )
@@ -394,7 +432,7 @@ fun FriendListScreen(
                                     val service = retrofit.create(FriendService::class.java)
 
                                     val response = service.removeFriends(
-                                        removeFriend(
+                                        RemoveFriendBody(
                                             friend.account_id,
                                             auth_token
                                         )
@@ -426,31 +464,4 @@ fun FriendListScreen(
         }
 
     }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun FriendListAppBar(navController: NavController) {
-    TopAppBar(
-        title = {
-            Text(
-                text = "Friend List",
-            )
-        },
-        navigationIcon = {
-            IconButton(onClick = {
-                navController.navigate(Screen.HomeScreen.route)
-            }) {
-                Icon(
-                    imageVector = Icons.Filled.ArrowBack,
-                    contentDescription = "Localized description"
-                )
-            }
-        },
-        colors = TopAppBarDefaults.topAppBarColors(
-            colorResource(id = R.color.purple_500),
-            titleContentColor = Color.White,
-            navigationIconContentColor = Color.White,
-        ),
-    )
 }

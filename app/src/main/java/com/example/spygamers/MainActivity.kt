@@ -1,25 +1,33 @@
 package com.example.spygamers
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.material3.MaterialTheme
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.spygamers.controllers.GamerViewModel
+import com.example.spygamers.ui.theme.SpyGamersTheme
+
+import com.example.spygamers.controllers.GamerViewModelFactory
 
 class MainActivity : ComponentActivity() {
+    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter",
+        "UnusedMaterialScaffoldPaddingParameter"
+    )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val viewModelFactory = GamerViewModel.GamerViewModelFactory(
+        val viewModelFactory = GamerViewModelFactory(
             (application as GamerApp).repository
         )
         setContent {
-            MaterialTheme {
+            SpyGamersTheme {
+
+                // Initialize NavController and ViewModel here
                 val navController = rememberNavController()
                 val viewModel: GamerViewModel = viewModel(factory = viewModelFactory)
+
 
                 NavGraph(navController = navController, viewModel = viewModel)
             }

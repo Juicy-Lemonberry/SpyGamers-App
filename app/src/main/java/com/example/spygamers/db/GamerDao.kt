@@ -1,11 +1,10 @@
-package com.example.spygamers
+package com.example.spygamers.db
 
 import androidx.room.Dao
-import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import androidx.room.Update
+import com.example.spygamers.db.schemas.Gamer
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -21,12 +20,4 @@ interface GamerDao {
     // Retrieve the session token
     @Query("SELECT sessionToken FROM userInfo LIMIT 1")
     fun getSessionToken(): Flow<String?>
-
-    // Retrieve the timezone code
-    @Query("SELECT timezoneCode FROM userInfo LIMIT 1")
-    fun getTimezoneCode(): Flow<String?>
-
-    // Retrieve the username
-    @Query("SELECT username FROM userInfo LIMIT 1")
-    fun getUsername(): Flow<String?>
 }
