@@ -25,18 +25,22 @@ data class UserLogin(
 )
 
 data class getRecomendation(
-    val auth_token: String
+    val auth_token: String,
+    val sort_by: String = "DEFAULT",
+    val chunk_size: Int = 10
 )
-data class Recommendation(
+
+data class result(
     val id : String,
     val username: String,
     val game_preference_weightage: Int,
     val same_group_weightage: Int,
     val timezone_weightage: Int
 )
+
 data class Recommendations(
     val status: String,
-    val friends: List<Recommendation>
+    val result: List<result>
 )
 
 interface RecommendationService {
