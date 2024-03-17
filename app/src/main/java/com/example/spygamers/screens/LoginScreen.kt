@@ -26,15 +26,13 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
-import com.example.spygamers.services.AuthenticationService
 import com.example.spygamers.db.schemas.Gamer
 import com.example.spygamers.controllers.GamerViewModel
 import com.example.spygamers.Screen
-import com.example.spygamers.services.UserLogin
+import com.example.spygamers.services.ServiceFactory
+import com.example.spygamers.services.authentication.UserLoginBody
 import kotlinx.coroutines.launch
 import org.json.JSONObject
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 
 @Composable
 fun LoginScreen(
@@ -95,14 +93,9 @@ fun LoginScreen(
         Button(
             onClick = {
                 viewModel.viewModelScope.launch {
-                    val userCredentials = UserLogin(username, password)
+                    val userCredentials = UserLoginBody(username, password)
 
-                    val retrofit = Retrofit.Builder()
-                        .baseUrl("http://spygamers.servehttp.com:44414/app-api/")
-                        .addConverterFactory(GsonConverterFactory.create())
-                        .build()
-
-                    val authService = retrofit.create(AuthenticationService::class.java)
+                    val authService = ServiceFactory().createAuthenticationService()
 
                     val retrofitResponse = authService.userLogin(userCredentials)
                     val errorBody = retrofitResponse.errorBody()?.string()

@@ -30,16 +30,16 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
-import com.example.spygamers.services.Friend
-import com.example.spygamers.services.FriendService
 import com.example.spygamers.controllers.GamerViewModel
 import com.example.spygamers.R
 import com.example.spygamers.Screen
 import com.example.spygamers.components.AppBar
 import com.example.spygamers.components.DrawerBody
 import com.example.spygamers.components.DrawerHeader
-import com.example.spygamers.services.GetFriendsBody
-import com.example.spygamers.services.RemoveFriendBody
+import com.example.spygamers.models.Friendship
+import com.example.spygamers.services.AuthOnlyBody
+import com.example.spygamers.services.ServiceFactory
+import com.example.spygamers.services.friendship.RemoveFriendBody
 import com.example.spygamers.utils.generateDefaultDrawerItems
 import com.example.spygamers.utils.handleDrawerItemClicked
 import kotlinx.coroutines.launch
@@ -86,26 +86,20 @@ private fun MainBody(
     navController: NavController,
     viewModel: GamerViewModel
 ) {
+    val serviceFactory = ServiceFactory()
     var auth_token by rememberSaveable { mutableStateOf("") }
 
     auth_token = viewModel.getSessionToken().toString()
 
-    var friends by rememberSaveable { mutableStateOf<List<Friend>>(emptyList()) }
-    var incomingRequests by rememberSaveable { mutableStateOf<List<Friend>>(emptyList()) }
-    var outgoingRequests by rememberSaveable { mutableStateOf<List<Friend>>(emptyList()) }
-    var acceptedFriends by rememberSaveable { mutableStateOf<List<Friend>>(emptyList()) }
+    var friends by rememberSaveable { mutableStateOf<List<Friendship>>(emptyList()) }
+    var incomingRequests by rememberSaveable { mutableStateOf<List<Friendship>>(emptyList()) }
+    var outgoingRequests by rememberSaveable { mutableStateOf<List<Friendship>>(emptyList()) }
+    var acceptedFriends by rememberSaveable { mutableStateOf<List<Friendship>>(emptyList()) }
 
     LaunchedEffect(Unit) {
         viewModel.viewModelScope.launch {
-
-            val retrofit = Retrofit.Builder()
-                .baseUrl("http://spygamers.servehttp.com:44414/")
-                .addConverterFactory(GsonConverterFactory.create())
-                .build()
-
-            val service = retrofit.create(FriendService::class.java)
-
-            val response = service.getFriends(GetFriendsBody(auth_token))
+            val service = serviceFactory.createFriendshipService()
+            val response = service.getFriends(AuthOnlyBody(auth_token))
             if (response.isSuccessful) {
                 friends = response.body()?.friends ?: emptyList()
                 incomingRequests = friends.filter { it.status == "INCOMING_REQUEST" }
@@ -216,12 +210,7 @@ private fun MainBody(
                             {
                                 viewModel.viewModelScope.launch {
 
-                                    val retrofit = Retrofit.Builder()
-                                        .baseUrl("http://spygamers.servehttp.com:44414/")
-                                        .addConverterFactory(GsonConverterFactory.create())
-                                        .build()
-
-                                    val service = retrofit.create(FriendService::class.java)
+                                    val service = serviceFactory.createFriendshipService();
 
                                     val response = service.removeFriends(
                                         RemoveFriendBody(
@@ -321,12 +310,7 @@ private fun MainBody(
                             onClick = {
                                 viewModel.viewModelScope.launch {
 
-                                    val retrofit = Retrofit.Builder()
-                                        .baseUrl("http://spygamers.servehttp.com:44414/")
-                                        .addConverterFactory(GsonConverterFactory.create())
-                                        .build()
-
-                                    val service = retrofit.create(FriendService::class.java)
+                                    val service = serviceFactory.createFriendshipService();
 
                                     val response = service.removeFriends(
                                         RemoveFriendBody(
@@ -423,13 +407,7 @@ private fun MainBody(
                         IconButton(
                             onClick = {
                                 viewModel.viewModelScope.launch {
-
-                                    val retrofit = Retrofit.Builder()
-                                        .baseUrl("http://spygamers.servehttp.com:44414/")
-                                        .addConverterFactory(GsonConverterFactory.create())
-                                        .build()
-
-                                    val service = retrofit.create(FriendService::class.java)
+                                    val service = serviceFactory.createFriendshipService();
 
                                     val response = service.removeFriends(
                                         RemoveFriendBody(

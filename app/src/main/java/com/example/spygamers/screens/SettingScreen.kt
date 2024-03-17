@@ -39,13 +39,13 @@ import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
-import com.example.spygamers.services.AuthenticationService
 import com.example.spygamers.controllers.GamerViewModel
 import com.example.spygamers.Screen
 import com.example.spygamers.components.AppBar
 import com.example.spygamers.components.DrawerBody
 import com.example.spygamers.components.DrawerHeader
-import com.example.spygamers.services.ChangeUsernameBody
+import com.example.spygamers.services.ServiceFactory
+import com.example.spygamers.services.profilechanger.ChangeUsernameBody
 import com.example.spygamers.utils.generateDefaultDrawerItems
 import com.example.spygamers.utils.handleDrawerItemClicked
 
@@ -185,14 +185,10 @@ private fun MainBody(viewModel: GamerViewModel, navController: NavController){
                 viewModel.viewModelScope.launch {
                     val newUserName = sessionToken?.let { username?.let { it1 -> ChangeUsernameBody(it, it1) } }
 
-                    val retrofit = Retrofit.Builder()
-                        .baseUrl("http://spygamers.servehttp.com:44414/app-api/")
-                        .addConverterFactory(GsonConverterFactory.create())
-                        .build()
 
-                    val authService = retrofit.create(AuthenticationService::class.java)
+                    val service = ServiceFactory().createProfileChangerService();
 
-                    val retrofitResponse = newUserName?.let { authService.changeUsername(it) }
+                    val retrofitResponse = newUserName?.let { service.changeUsername(it) }
 
                     if (retrofitResponse != null) {
                         if (retrofitResponse.isSuccessful) {

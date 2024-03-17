@@ -26,15 +26,13 @@ import com.example.spygamers.components.AppBar
 import com.example.spygamers.components.DrawerBody
 import com.example.spygamers.components.DrawerHeader
 import com.example.spygamers.controllers.GamerViewModel
-import com.example.spygamers.services.RecommendationService
-import com.example.spygamers.services.GetRecommendationBody
-import com.example.spygamers.services.RecommendedFriend
+import com.example.spygamers.models.RecommendedFriend
+import com.example.spygamers.services.ServiceFactory
+import com.example.spygamers.services.recommendations.FriendsRecommendationBody
 import com.example.spygamers.utils.generateDefaultDrawerItems
 import com.example.spygamers.utils.handleDrawerItemClicked
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
@@ -73,6 +71,7 @@ fun FriendRecommendationScreen(
 
 @Composable
 private fun MainBody(viewModel: GamerViewModel, navController: NavController){
+    val serviceFactory = ServiceFactory();
     val auth_token = viewModel.getSessionToken().toString()
     // Maintain a list of friend recommendations
     var recommendations by rememberSaveable { mutableStateOf<List<RecommendedFriend>?>(null) }
@@ -82,13 +81,8 @@ private fun MainBody(viewModel: GamerViewModel, navController: NavController){
         if (auth_token.isNotEmpty()) {
             viewModel.viewModelScope.launch(Dispatchers.IO) {
                 try {
-                    val retrofit = Retrofit.Builder()
-                        .baseUrl("http://spygamers.servehttp.com:44414/")
-                        .addConverterFactory(GsonConverterFactory.create())
-                        .build()
-
-                    val service = retrofit.create(RecommendationService::class.java)
-                    val response = service.getRecommendations(GetRecommendationBody(auth_token))
+                    val service = serviceFactory.createRecommendationService()
+                    val response = service.getRecommendations(FriendsRecommendationBody(auth_token))
 
                     if (response.isSuccessful) {
                         val responseBody = response.body()

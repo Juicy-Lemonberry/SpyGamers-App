@@ -23,10 +23,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
-import com.example.spygamers.services.AuthenticationService
 import com.example.spygamers.controllers.GamerViewModel
 import com.example.spygamers.Screen
-import com.example.spygamers.services.UserRegistration
+import com.example.spygamers.services.ServiceFactory
+import com.example.spygamers.services.authentication.UserRegistrationBody
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 import retrofit2.Retrofit
@@ -169,15 +169,10 @@ fun RegisterScreen(
             Button(
                 onClick = {
                     if (isUsernameValid && isEmailValid && isPasswordValid && isConfirmPasswordValid) {
-                        val user = UserRegistration(username, password, email)
+                        val user = UserRegistrationBody(username, password, email)
 
                         viewModel.viewModelScope.launch {
-                            val retrofit = Retrofit.Builder()
-                                .baseUrl("http://spygamers.servehttp.com:44414/app-api/")
-                                .addConverterFactory(GsonConverterFactory.create())
-                                .build()
-
-                            val authService = retrofit.create(AuthenticationService::class.java)
+                            val authService = ServiceFactory().createAuthenticationService()
 
                             val retrofitResponse = authService.registerUser(user)
 
