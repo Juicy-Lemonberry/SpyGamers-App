@@ -24,10 +24,28 @@ data class UserLogin(
 
 )
 
-data class GetDM(
-    val auth_token: String,
-    val target_account_id: Int
+data class getRecomendation(
+    val auth_token: String
 )
+data class Recommendation(
+    val id : String,
+    val username: String,
+    val game_preference_weightage: Int,
+    val same_group_weightage: Int,
+    val timezone_weightage: Int
+)
+data class Recommendations(
+    val status: String,
+    val friends: List<Recommendation>
+)
+
+interface RecommendationService {
+    //Reco List Stuff
+    @POST("http://spygamers.servehttp.com:44414/app-api/recommend/friends")
+    suspend fun getRecommendations(
+        @Body user: getRecomendation
+    ): Response<Recommendations>
+}
 
 data class newUsername(
     val auth_token: String,
@@ -44,11 +62,6 @@ interface AuthenticationService {
     @POST("http://spygamers.servehttp.com:44414/app-api/account/login")
     suspend fun userLogin(
         @Body user: UserLogin
-    ): Response<RetrofitResponse>
-
-    @POST("http://spygamers.servehttp.com:44414/app-api/account/get-direct-messages")
-    suspend fun getDM(
-        @Body user: GetDM
     ): Response<RetrofitResponse>
 
     @PUT("http://spygamers.servehttp.com:44414/app-api/account/change-username")
