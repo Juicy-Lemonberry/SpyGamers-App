@@ -11,7 +11,6 @@ sealed class Screen(val route: String) {
     object SettingScreen : Screen(route = "Setting_Screen")
     object FriendListScreen : Screen(route = "FriendList_Screen")
     object HomeScreen : Screen(route = "Home_Screen")
-    object FriendRecommendationScreen : Screen(route = "FriendRecommendation_Screen")
 }
 
 @Composable
@@ -35,8 +34,8 @@ fun NavGraph(
         composable(route = "Home_Screen") {
             HomeScreen(navController = navController, viewModel)
         }
-        composable(route = "FriendRecommendation_Screen") {
-            FriendRecommendationScreen(navController, viewModel)
+        composable(route = "FriendList_Screen") {
+            FriendListScreen(navController = navController, viewModel)
         }
     }
 }
