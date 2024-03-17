@@ -34,5 +34,8 @@ fun NavGraph(
         composable(route = "Home_Screen") {
             HomeScreen(navController = navController, viewModel)
         }
+        composable(route = "FriendList_Screen") {
+            FriendListScreen(navController = navController, viewModel)
+        }
     }
 }

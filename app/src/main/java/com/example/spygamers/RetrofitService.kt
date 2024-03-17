@@ -34,6 +34,20 @@ data class newUsername(
     val new_username: String
 )
 
+data class getFriend(
+    val auth_token: String,
+)
+
+data class Friend(
+    val account_id: Int,
+    val username: String,
+    val status: String,
+)
+
+data class Friends(
+    val status: String,
+    val friends: List<Friend>
+)
 
 interface AuthenticationService {
     @POST("http://spygamers.servehttp.com:44414/app-api/account/register")
@@ -56,5 +70,10 @@ interface AuthenticationService {
         @Body user: newUsername
     ): Response<RetrofitResponse>
 
+    //Friend List Stuff
+    @POST("http://spygamers.servehttp.com:44414/app-api/account/get-friends")
+    suspend fun getFriends(
+        @Body user: getFriend
+    ): Response<Friends>
 }
 

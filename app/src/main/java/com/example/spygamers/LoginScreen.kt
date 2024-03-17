@@ -112,7 +112,7 @@ fun LoginScreen(
                     if (retrofitResponse.isSuccessful) {
                         viewModel.insertOrUpdateGamer(gamer)
 
-                        navController.navigate(Screen.SettingScreen.route)
+                        navController.navigate(Screen.HomeScreen.route)
                     } else {
                         if (errorBody != null) {
                             val parsedError = JSONObject(errorBody)
