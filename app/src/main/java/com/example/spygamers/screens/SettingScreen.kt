@@ -73,7 +73,7 @@ fun SettingScreen(
         drawerContent = {
             DrawerHeader()
             DrawerBody(
-                items = generateDefaultDrawerItems(),
+                items = generateDefaultDrawerItems(Screen.SettingScreen),
                 onItemClick = {item ->
                     handleDrawerItemClicked(item, Screen.SettingScreen, navController)
                 }

@@ -58,7 +58,7 @@ fun FriendRecommendationScreen(
         drawerContent = {
             DrawerHeader()
             DrawerBody(
-                items = generateDefaultDrawerItems(),
+                items = generateDefaultDrawerItems(Screen.FriendRecommendationScreen),
                 onItemClick = {item ->
                     handleDrawerItemClicked(item, Screen.FriendRecommendationScreen, navController)
                 }

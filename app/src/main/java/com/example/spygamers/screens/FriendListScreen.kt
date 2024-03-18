@@ -70,7 +70,7 @@ fun FriendListScreen(
         drawerContent = {
             DrawerHeader()
             DrawerBody(
-                items = generateDefaultDrawerItems(),
+                items = generateDefaultDrawerItems(Screen.FriendListScreen),
                 onItemClick = {item ->
                     handleDrawerItemClicked(item, Screen.FriendListScreen, navController)
                 }

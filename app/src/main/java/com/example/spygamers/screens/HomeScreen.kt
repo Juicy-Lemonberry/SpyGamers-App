@@ -55,7 +55,7 @@ fun HomeScreen(
         drawerContent = {
             DrawerHeader()
             DrawerBody(
-                items = generateDefaultDrawerItems(),
+                items = generateDefaultDrawerItems(Screen.HomeScreen),
                 onItemClick = {item ->
                     handleDrawerItemClicked(item, Screen.HomeScreen, navController)
                 }
