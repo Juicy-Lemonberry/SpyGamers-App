@@ -1,6 +1,7 @@
 package com.example.spygamers.screens
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,7 +17,7 @@ import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,22 +27,32 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
-import com.example.spygamers.db.schemas.Gamer
 import com.example.spygamers.controllers.GamerViewModel
 import com.example.spygamers.Screen
+import com.example.spygamers.components.authform.PasswordTextField
+import com.example.spygamers.components.authform.UsernameTextField
+import com.example.spygamers.components.authform.isValidPassword
+import com.example.spygamers.components.authform.isValidUsername
+import com.example.spygamers.screens.register.isValidEmail
 import com.example.spygamers.services.ServiceFactory
 import com.example.spygamers.services.authentication.UserLoginBody
 import kotlinx.coroutines.launch
-import org.json.JSONObject
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun LoginScreen(
     navController: NavController,
     viewModel: GamerViewModel
 ) {
-    var username by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var message by remember { mutableStateOf("") }
+    val context = LocalContext.current
+    var inputUsername = rememberSaveable {
+        mutableStateOf("")
+    }
+    var inputPassword = rememberSaveable {
+        mutableStateOf("")
+    }
+
+    var message = rememberSaveable { mutableStateOf("") }
 
     Column(
         modifier = Modifier
@@ -58,69 +69,54 @@ fun LoginScreen(
         )
 
         Text(
-            text = message,
+            text = message.value,
             modifier = Modifier.padding(bottom = 10.dp)
         )
 
-        // Username Text Field
-        TextField(
-            value = username,
-            onValueChange = { username = it },
-            placeholder = { Text("Username") },
-            label = { Text("Username") },
-            modifier = Modifier
-                .width(280.dp)
-                .padding(bottom = 16.dp)
-                .clip(shape = RoundedCornerShape(15.dp, 15.dp, 15.dp, 15.dp)),
-            keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
-        )
-
-        // Password Text Field
-        TextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Password") },
-            modifier = Modifier
-                .width(280.dp)
-                .padding(bottom = 16.dp)
-                .clip(shape = RoundedCornerShape(15.dp, 15.dp, 15.dp, 15.dp)),
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(onDone = {})
-        )
+        UsernameTextField(inputUsername, message)
+        PasswordTextField(inputPassword, message)
 
         // Login Button
         Button(
             onClick = {
+
+                var filledUsername = inputUsername.value
                 viewModel.viewModelScope.launch {
-                    val userCredentials = UserLoginBody(username, password)
-
+                    val userCredentials = UserLoginBody(filledUsername, inputPassword.value)
                     val authService = ServiceFactory().createAuthenticationService()
+                    val response = authService.userLogin(userCredentials)
 
-                    val retrofitResponse = authService.userLogin(userCredentials)
-                    val errorBody = retrofitResponse.errorBody()?.string()
-                    val sessionToken = retrofitResponse.body()?.session_token ?: "Unknown"
-                    val accountID = retrofitResponse.body()?.account_id ?: -1
-
-                    Log.d("Login", "SessionToken: $sessionToken")
-
-                    val gamer = Gamer(sessionToken, accountID)
-
-                    if (retrofitResponse.isSuccessful) {
-                        viewModel.insertOrUpdateGamer(gamer)
-
-                        navController.navigate(Screen.HomeScreen.route)
-                    } else {
-                        if (errorBody != null) {
-                            val parsedError = JSONObject(errorBody)
-                            val errorMessage = parsedError.getString("status")
-
-                            message = errorMessage
-                        }
+                    if (!response.isSuccessful){
+                        Log.d("LoginScreen", "ERR :: " + response.errorBody().toString())
+                        Log.d("LoginScreen", "MSG :: " +  response.message())
+                        Log.d("LoginScreen", "RAW :: " + response.raw().toString())
+                        // TODO: Toast Message...
+                        return@launch
                     }
+
+                    val responseBody = response.body()!!;
+                    if (responseBody.status == "SUCCESS") {
+                        // TODO: Toast, Short Delay, Login...
+                        val sessionToken = responseBody.session_token!!
+                        viewModel.upsertUserData(
+                            sessionToken,
+                            filledUsername,
+                            responseBody.account_id!!
+                        )
+                        navController.navigate(Screen.HomeScreen.route)
+                        return@launch
+                    }
+
+                    var toastMessage = "Unknown Failure, try again later!";
+                    if (responseBody.status == "USERNAME_INVALID") {
+                        toastMessage = "The username doesn't exists! Register?"
+                    } else if (responseBody.status == "PASSWORD_INVALID") {
+                        toastMessage = "The password is incorrect!"
+                    }
+                    Toast.makeText(context, toastMessage, Toast.LENGTH_SHORT).show()
                 }
             },
-            enabled = username.isNotBlank() && password.isNotBlank(),
+            enabled = isValidInputs(inputUsername.value, inputPassword.value),
             modifier = Modifier
                 .width(150.dp)
                 .padding(8.dp)
@@ -141,4 +137,8 @@ fun LoginScreen(
             Text("Register")
         }
     }
+}
+
+private fun isValidInputs(username: String, password: String) : Boolean {
+    return isValidPassword(password) && isValidUsername(username)
 }

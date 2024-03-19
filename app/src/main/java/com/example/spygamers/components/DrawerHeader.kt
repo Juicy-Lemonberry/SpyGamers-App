@@ -12,7 +12,7 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun DrawerHeader(
-    headerText: String = "Home"
+    headerText: String = "Spygamers"
 ) {
     Box(
         modifier = Modifier

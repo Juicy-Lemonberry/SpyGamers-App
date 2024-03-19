@@ -11,6 +11,7 @@ import androidx.compose.material.Text
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
@@ -18,7 +19,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.example.spygamers.Screen
@@ -58,7 +58,7 @@ fun FriendRecommendationScreen(
         drawerContent = {
             DrawerHeader()
             DrawerBody(
-                items = generateDefaultDrawerItems(),
+                items = generateDefaultDrawerItems(Screen.FriendRecommendationScreen),
                 onItemClick = {item ->
                     handleDrawerItemClicked(item, Screen.FriendRecommendationScreen, navController)
                 }
@@ -72,45 +72,52 @@ fun FriendRecommendationScreen(
 @Composable
 private fun MainBody(viewModel: GamerViewModel, navController: NavController){
     val serviceFactory = ServiceFactory();
-    val auth_token = viewModel.getSessionToken().toString()
+    val sessionToken by viewModel.sessionToken.collectAsState()
     // Maintain a list of friend recommendations
-    var recommendations by rememberSaveable { mutableStateOf<List<RecommendedFriend>?>(null) }
+    var recommendations by rememberSaveable { mutableStateOf<List<RecommendedFriend>>(emptyList()) }
+    var isLoading by rememberSaveable {
+        mutableStateOf(true)
+    }
 
     // Fetch friend recommendations from API
     LaunchedEffect(Unit) {
-        if (auth_token.isNotEmpty()) {
-            viewModel.viewModelScope.launch(Dispatchers.IO) {
-                try {
-                    val service = serviceFactory.createRecommendationService()
-                    val response = service.getRecommendations(FriendsRecommendationBody(auth_token))
+        if (sessionToken.isBlank()) {
+            // TODO: Creating some popup warning and a small delay before routing...
+            Log.w("FriendRecommendationScreen", "Auth token is blank...");
+            navController.navigate(Screen.LoginScreen.route)
+        }
 
-                    if (response.isSuccessful) {
-                        val responseBody = response.body()
-                        if (responseBody != null) {
-                            recommendations = responseBody.result
-                        } else {
-                            Log.e("FriendRecommendationScreen", "Response body is null")
-                        }
-                    } else {
-                        Log.e("FriendRecommendationScreen", "Failed to get recommendations: ${response}")
-                    }
-                } catch (e: Exception) {
-                    Log.e("FriendRecommendationScreen", "Error fetching recommendations", e)
+        viewModel.viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val service = serviceFactory.createRecommendationService()
+                val response = service.getRecommendations(FriendsRecommendationBody(sessionToken))
+
+                if (!response.isSuccessful) {
+                    Log.e("FriendRecommendationScreen", "Failed to get recommendations :: $response")
                 }
+
+                val responseBody = response.body()
+                if (responseBody == null) {
+                    Log.e("FriendRecommendationScreen", "Response body is null")
+                } else {
+                    recommendations = responseBody.result;
+                }
+            } catch (e: Exception) {
+                Log.e("FriendRecommendationScreen", "Error fetching recommendations :: ", e)
+            } finally {
+                isLoading = true;
             }
-        } else {
-            Log.e("FriendRecommendationScreen", "Auth token is empty")
         }
     }
 
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        if (recommendations == null) {
+        if (isLoading) {
             CircularProgressIndicator() // Show loading indicator while fetching recommendations
-        } else if (recommendations.isNullOrEmpty()) {
-            Text(text = "No Friend Recommendations", modifier = Modifier.padding(horizontal = 16.dp))
+        } else if (recommendations.isEmpty()) {
+            Text(text = "No friends Recommended...")
         } else {
             LazyColumn {
-                items(recommendations!!) { friend ->
+                items(recommendations) { friend ->
                     Text(text = "Friend: ${friend.username}")
                 }
             }

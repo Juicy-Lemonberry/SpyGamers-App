@@ -6,6 +6,5 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "userInfo")
 data class Gamer(
-    @PrimaryKey val sessionToken: String,
-    @ColumnInfo(name = "accountID") val accountID: Int,
+    @PrimaryKey val sessionToken: String
 )

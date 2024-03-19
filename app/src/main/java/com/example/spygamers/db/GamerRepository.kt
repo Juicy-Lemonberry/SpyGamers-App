@@ -12,13 +12,12 @@ class GamerRepository(private val gamerDao: GamerDao, private val dataStore: Dat
         gamerDao.insertOrUpdateGamer(gamer)
     }
 
+    suspend fun deleteSessionToken() {
+        gamerDao.deleteAllSessionTokens();
+    }
+
     // Function to get the session token from the local database
     fun getSessionToken(): Flow<String?> {
         return gamerDao.getSessionToken()
-    }
-
-    // Function to get the account ID from the local database
-    fun getAccountId(): Flow<Int?> {
-        return gamerDao.getAccountId()
     }
 }

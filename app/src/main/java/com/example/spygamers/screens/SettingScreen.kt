@@ -36,6 +36,7 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.rememberScaffoldState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
@@ -73,7 +74,7 @@ fun SettingScreen(
         drawerContent = {
             DrawerHeader()
             DrawerBody(
-                items = generateDefaultDrawerItems(),
+                items = generateDefaultDrawerItems(Screen.SettingScreen),
                 onItemClick = {item ->
                     handleDrawerItemClicked(item, Screen.SettingScreen, navController)
                 }
@@ -88,8 +89,8 @@ fun SettingScreen(
 private fun MainBody(viewModel: GamerViewModel, navController: NavController){
     var gameName by rememberSaveable { mutableStateOf("") }
     var profilePicture by rememberSaveable { mutableStateOf<ImageBitmap?>(null) }
-    var username = viewModel.getUsername()
-    var sessionToken = viewModel.getSessionToken()
+    val username by viewModel.username.collectAsState()
+    val sessionToken by viewModel.sessionToken.collectAsState()
 
     // TODO: Load profile picture from backend server instead...
     val context = LocalContext.current
@@ -149,7 +150,7 @@ private fun MainBody(viewModel: GamerViewModel, navController: NavController){
             username?.let {
                 TextField(
                     value = it,
-                    onValueChange = { username = it },
+                    onValueChange = { /* TODO: Change username... */ },
                     label = { Text("Username") },
                     modifier = Modifier.width(225.dp)
                 )

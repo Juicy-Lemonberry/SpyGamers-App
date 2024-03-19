@@ -1,6 +1,5 @@
 package com.example.spygamers
 
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -9,11 +8,17 @@ import com.example.spygamers.controllers.GamerViewModel
 import com.example.spygamers.screens.FriendListScreen
 import com.example.spygamers.screens.FriendRecommendationScreen
 import com.example.spygamers.screens.HomeScreen
+import com.example.spygamers.screens.InitialScreen
 import com.example.spygamers.screens.LoginScreen
-import com.example.spygamers.screens.RegisterScreen
+import com.example.spygamers.screens.register.RegisterScreen
 import com.example.spygamers.screens.SettingScreen
 
 sealed class Screen(val route: String) {
+    /**
+     * Used to show loading, to determine if the user have a auth_token or not,
+     * before deciding to move to login or home screen...
+     */
+    object InitialScreen: Screen(route = "Initial_Screen")
     object LoginScreen : Screen(route = "Login_Screen")
     object RegisterScreen : Screen(route = "Register_Screen")
     object SettingScreen : Screen(route = "Setting_Screen")
@@ -33,25 +38,30 @@ fun NavGraph(
 ) {
     NavHost(
         navController = navController,
-        startDestination = Screen.LoginScreen.route
+        startDestination = Screen.InitialScreen.route
     ) {
-        composable(route = "Login_Screen") {
+
+        composable(route = Screen.LoginScreen.route) {
             LoginScreen(navController = navController, viewModel)
         }
-        composable(route = "Register_Screen") {
+        composable(route = Screen.RegisterScreen.route) {
             RegisterScreen(navController = navController, viewModel)
         }
-        composable(route = "Setting_Screen") {
+        composable(route = Screen.SettingScreen.route) {
             SettingScreen(navController = navController, viewModel)
         }
-        composable(route = "Home_Screen") {
+        composable(route = Screen.HomeScreen.route) {
             HomeScreen(navController = navController, viewModel)
         }
-        composable(route = "FriendList_Screen") {
+        composable(route = Screen.FriendListScreen.route) {
             FriendListScreen(navController = navController, viewModel)
         }
-        composable(route = "FriendRecommendation_Screen") {
+        composable(route = Screen.FriendRecommendationScreen.route) {
             FriendRecommendationScreen(navController = navController, viewModel)
+        }
+
+        composable(route = Screen.InitialScreen.route) {
+            InitialScreen(navController = navController, viewModel = viewModel)
         }
     }
 }
