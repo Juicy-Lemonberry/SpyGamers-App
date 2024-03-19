@@ -200,7 +200,7 @@ private fun MainBody(
                                 val response = service.addFriends(
                                     AddFriendBody(
                                         friend.account_id,
-                                        auth_token
+                                        sessionToken
                                     )
                                 )
                                 if (response.isSuccessful) {

@@ -52,6 +52,7 @@ fun DrawerBody(
                 Text(
                     text = item.title,
                     style = itemTextStyle,
+                    color = if (item.isSelected) Color.White else Color.Black,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -67,14 +68,16 @@ private fun RenderIcon(item: DrawerMenuItem) {
             Icon(
                 imageVector = icon.imageVector,
                 contentDescription = item.contentDescription,
-                modifier = Modifier.size(iconSize)
+                modifier = Modifier.size(iconSize),
+                tint = if (item.isSelected) Color.White else Color.Black
             )
         }
         is ImageResource.Drawable -> {
             Icon(
                 painter = painterResource(id = icon.resourceId),
                 contentDescription = item.contentDescription,
-                modifier = Modifier.size(iconSize)
+                modifier = Modifier.size(iconSize),
+                tint = if (item.isSelected) Color.White else Color.Black
             )
         }
     }
