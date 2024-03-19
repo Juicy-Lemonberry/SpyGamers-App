@@ -39,6 +39,7 @@ import com.example.spygamers.components.DrawerHeader
 import com.example.spygamers.models.Friendship
 import com.example.spygamers.services.AuthOnlyBody
 import com.example.spygamers.services.ServiceFactory
+import com.example.spygamers.services.friendship.AddFriendBody
 import com.example.spygamers.services.friendship.RemoveFriendBody
 import com.example.spygamers.utils.generateDefaultDrawerItems
 import com.example.spygamers.utils.handleDrawerItemClicked
@@ -115,7 +116,9 @@ private fun MainBody(
         fun removeIncomingRequest(idToRemove: Int) {
             incomingRequests = incomingRequests.filter { it.account_id != idToRemove }
         }
-
+        fun addFriend(idToAdd: Int){
+            acceptedFriends += incomingRequests.filter {it.account_id == idToAdd}
+        }
         fun removeOutgoingRequest(idToRemove: Int) {
             outgoingRequests = outgoingRequests.filter { it.account_id != idToRemove }
         }
@@ -134,7 +137,7 @@ private fun MainBody(
                 ) {
                     Text(
                         text = "Incoming Requests",
-                        style = MaterialTheme.typography.h2,
+                        style = MaterialTheme.typography.h4,
                         color = Color.White,
                         modifier = Modifier.fillMaxSize()
                     )
@@ -159,7 +162,8 @@ private fun MainBody(
                             text = "No Incoming Requests",
                             modifier = Modifier
                                 .padding(bottom = 8.dp)
-                                .fillMaxSize()
+                                .fillMaxSize(),
+                            style = MaterialTheme.typography.body1,
                         )
                     }
                 } else {
@@ -183,12 +187,33 @@ private fun MainBody(
                             text = "Incoming Request from ${friend.username}",
                             modifier = Modifier
                                 .weight(1f)
-                                .padding(start = 8.dp, end = 16.dp)
+                                .padding(start = 8.dp, end = 16.dp),
+                            style = MaterialTheme.typography.body1,
                         )
 
                         // Accept icon
                         IconButton(
-                            onClick = { /* Handle accept action */ },
+                            onClick = { viewModel.viewModelScope.launch {
+
+                                val service = serviceFactory.createFriendshipService();
+
+                                val response = service.addFriends(
+                                    AddFriendBody(
+                                        friend.account_id,
+                                        auth_token
+                                    )
+                                )
+                                if (response.isSuccessful) {
+                                    addFriend(friend.account_id)
+                                    removeIncomingRequest(friend.account_id)
+                                } else {
+                                    // Handle error
+                                    Log.e(
+                                        "FriendService",
+                                        "Failed to get friends: ${response.message()}"
+                                    )
+                                }
+                            } },
                             modifier = Modifier
                                 .padding(4.dp)
                                 .background(Color.Green)
@@ -251,7 +276,7 @@ private fun MainBody(
                 ) {
                     Text(
                         text = "Outgoing Requests",
-                        style = MaterialTheme.typography.h2,
+                        style = MaterialTheme.typography.h4,
                         color = Color.White,
                         modifier = Modifier.fillMaxSize()
                     )
@@ -274,7 +299,8 @@ private fun MainBody(
                             text = "No Outgoing Requests",
                             modifier = Modifier
                                 .padding(bottom = 8.dp)
-                                .fillMaxSize()
+                                .fillMaxSize(),
+                            style = MaterialTheme.typography.body1,
                         )
                     }
                 } else {
@@ -298,7 +324,8 @@ private fun MainBody(
                             text = "Outgoing Request to ${friend.username}",
                             modifier = Modifier
                                 .weight(1f)
-                                .padding(start = 8.dp, end = 16.dp)
+                                .padding(start = 8.dp, end = 16.dp),
+                            style = MaterialTheme.typography.body1,
                         )
 
                         // Reject icon
@@ -350,7 +377,7 @@ private fun MainBody(
                 ) {
                     Text(
                         text = "Friends",
-                        style = MaterialTheme.typography.h2,
+                        style = MaterialTheme.typography.h4,
                         color = Color.White,
                         modifier = Modifier.fillMaxSize()
                     )
@@ -374,7 +401,8 @@ private fun MainBody(
                             text = "No Friends",
                             modifier = Modifier
                                 .padding(bottom = 8.dp)
-                                .fillMaxSize()
+                                .fillMaxSize(),
+                            style = MaterialTheme.typography.body1,
                         )
                     }
                 } else {
@@ -397,7 +425,8 @@ private fun MainBody(
                             text = "Friend: ${friend.username}",
                             modifier = Modifier
                                 .weight(1f)
-                                .padding(start = 8.dp, end = 16.dp)
+                                .padding(start = 8.dp, end = 16.dp),
+                            style = MaterialTheme.typography.body1,
                         )
                         // Reject icon
                         IconButton(
