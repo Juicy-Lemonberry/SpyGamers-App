@@ -18,4 +18,9 @@ interface FriendshipService {
     suspend fun removeFriends(
         @Body user: RemoveFriendBody
     ): Response<StatusOnlyResponse>
+
+    @POST("http://spygamers.servehttp.com:44414/app-api/account/send-friend-request")
+    suspend fun addFriends(
+        @Body user: AddFriendBody
+    ): Response<StatusOnlyResponse>
 }
