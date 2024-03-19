@@ -6,6 +6,7 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
@@ -36,9 +37,7 @@ fun HomeScreen(
     var username by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var message by rememberSaveable { mutableStateOf("") }
-    var auth_token by rememberSaveable { mutableStateOf("") }
-
-    auth_token = viewModel.getSessionToken().toString()
+    val auth_token by viewModel.sessionToken.collectAsState()
 
     Scaffold(
         scaffoldState = scaffoldState,

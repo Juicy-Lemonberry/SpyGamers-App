@@ -13,9 +13,8 @@ interface GamerDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertOrUpdateGamer(gamer: Gamer)
 
-    // Retrieve the account ID
-    @Query("SELECT accountID FROM userInfo LIMIT 1")
-    fun getAccountId(): Flow<Int?>
+    @Query("DELETE FROM userInfo")
+    suspend fun deleteAllSessionTokens();
 
     // Retrieve the session token
     @Query("SELECT sessionToken FROM userInfo LIMIT 1")

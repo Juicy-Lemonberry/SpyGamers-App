@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 import com.example.spygamers.db.schemas.Gamer
 import kotlinx.coroutines.CoroutineScope
 
-@Database(entities = [Gamer::class], version = 3)
+@Database(entities = [Gamer::class], version = 4)
 abstract class GamerDatabase : RoomDatabase() {
     abstract fun gamerDao(): GamerDao
 

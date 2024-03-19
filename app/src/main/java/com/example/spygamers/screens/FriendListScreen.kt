@@ -17,9 +17,9 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -43,8 +43,6 @@ import com.example.spygamers.services.friendship.RemoveFriendBody
 import com.example.spygamers.utils.generateDefaultDrawerItems
 import com.example.spygamers.utils.handleDrawerItemClicked
 import kotlinx.coroutines.launch
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
@@ -87,9 +85,7 @@ private fun MainBody(
     viewModel: GamerViewModel
 ) {
     val serviceFactory = ServiceFactory()
-    var auth_token by rememberSaveable { mutableStateOf("") }
-
-    auth_token = viewModel.getSessionToken().toString()
+    val sessionToken by viewModel.sessionToken.collectAsState()
 
     var friends by rememberSaveable { mutableStateOf<List<Friendship>>(emptyList()) }
     var incomingRequests by rememberSaveable { mutableStateOf<List<Friendship>>(emptyList()) }
@@ -99,7 +95,7 @@ private fun MainBody(
     LaunchedEffect(Unit) {
         viewModel.viewModelScope.launch {
             val service = serviceFactory.createFriendshipService()
-            val response = service.getFriends(AuthOnlyBody(auth_token))
+            val response = service.getFriends(AuthOnlyBody(sessionToken))
             if (response.isSuccessful) {
                 friends = response.body()?.friends ?: emptyList()
                 incomingRequests = friends.filter { it.status == "INCOMING_REQUEST" }
@@ -215,7 +211,7 @@ private fun MainBody(
                                     val response = service.removeFriends(
                                         RemoveFriendBody(
                                             friend.account_id,
-                                            auth_token
+                                            sessionToken
                                         )
                                     )
                                     if (response.isSuccessful) {
@@ -315,7 +311,7 @@ private fun MainBody(
                                     val response = service.removeFriends(
                                         RemoveFriendBody(
                                             friend.account_id,
-                                            auth_token
+                                            sessionToken
                                         )
                                     )
                                     if (response.isSuccessful) {
@@ -412,7 +408,7 @@ private fun MainBody(
                                     val response = service.removeFriends(
                                         RemoveFriendBody(
                                             friend.account_id,
-                                            auth_token
+                                            sessionToken
                                         )
                                     )
                                     if (response.isSuccessful) {
