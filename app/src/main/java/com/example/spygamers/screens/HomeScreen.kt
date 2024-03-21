@@ -38,6 +38,7 @@ fun HomeScreen(
     var password by rememberSaveable { mutableStateOf("") }
     var message by rememberSaveable { mutableStateOf("") }
     val auth_token by viewModel.sessionToken.collectAsState()
+    val accountID by viewModel.accountID.collectAsState()
 
     Scaffold(
         scaffoldState = scaffoldState,
@@ -56,6 +57,7 @@ fun HomeScreen(
             DrawerBody(
                 items = generateDefaultDrawerItems(Screen.HomeScreen),
                 onItemClick = {item ->
+                    viewModel.setViewingUserAccount(accountID)
                     handleDrawerItemClicked(item, Screen.HomeScreen, navController)
                 }
             )

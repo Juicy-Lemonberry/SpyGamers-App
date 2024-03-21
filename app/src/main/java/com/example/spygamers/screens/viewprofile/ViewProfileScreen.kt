@@ -33,6 +33,7 @@ import com.example.spygamers.components.appbar.AppBar
 import com.example.spygamers.components.appbar.DrawerBody
 import com.example.spygamers.components.appbar.DrawerHeader
 import com.example.spygamers.components.EditStringDialog
+import com.example.spygamers.components.EditTimezoneDialog
 import com.example.spygamers.components.EditableField
 import com.example.spygamers.components.NonEditableField
 import com.example.spygamers.controllers.GamerViewModel
@@ -44,6 +45,7 @@ import com.example.spygamers.services.authentication.FullAccountData
 import com.example.spygamers.services.profilesearch.ProfileSearchService
 import com.example.spygamers.utils.generateDefaultDrawerItems
 import com.example.spygamers.utils.handleDrawerItemClicked
+import com.example.spygamers.utils.toTimezoneOffset
 import kotlinx.coroutines.launch
 import java.text.DateFormat.getDateInstance
 import java.util.Date
@@ -73,6 +75,13 @@ fun ViewProfileScreen(
     }
 }
 
+private enum class CurrentEditMode {
+    USERNAME,
+    EMAIL,
+    TIMEZONE,
+    GAME_PREFERENCE
+}
+
 @Composable
 private fun MainBody(
     navController: NavController,
@@ -95,10 +104,10 @@ private fun MainBody(
     val showEditDialog = rememberSaveable { mutableStateOf(false) }
     val editingField = rememberSaveable { mutableStateOf("") }
     val initialEditValue = rememberSaveable { mutableStateOf("") }
+    val targetEditMode = rememberSaveable { mutableStateOf(CurrentEditMode.USERNAME) }
 
     LaunchedEffect(accountID) {
         if (isViewingSelf) {
-            // Assume getSelfProfileInformation() and getPublicProfileInformation() are suspend functions
             val accountData = getSelfProfileInformation(context, sessionToken)
             accountData?.let {
                 username.value = it.username
@@ -128,24 +137,32 @@ private fun MainBody(
             showEditDialog.value = true
             editingField.value = field
             initialEditValue.value = username.value
+            targetEditMode.value = CurrentEditMode.USERNAME
         }
         Spacer(modifier = Modifier.height(8.dp))
         LazyColumn {
             item {
                 if (isViewingSelf) {
+                    // Show editable email field, and timezone code if viewing own profile...
                     EditableField("Email", email.value) {
                         showEditDialog.value = true
                         editingField.value = "Email"
                         initialEditValue.value = email.value
+                        targetEditMode.value = CurrentEditMode.EMAIL
                     }
-                }
-                EditableField("Timezone", timezoneCode.value) {
-                    if (isViewingSelf) {
+                    EditableField("Timezone", timezoneCode.value) {
                         showEditDialog.value = true
                         editingField.value = "Timezone"
                         // TODO: Special edit dialog for timezone....
                         initialEditValue.value = timezoneCode.value
+                        targetEditMode.value = CurrentEditMode.TIMEZONE
                     }
+                } else {
+                    // Cant edit if not viewing own profile...
+                    NonEditableField(
+                        label = "Timezone",
+                        value = toTimezoneOffset(timezoneCode.value)
+                    )
                 }
                 NonEditableField("Date Created", getDateInstance().format(dateCreated.value))
                 Divider()
@@ -156,11 +173,24 @@ private fun MainBody(
 
 
     if (showEditDialog.value) {
-        EditStringDialog(editingField.value, initialEditValue.value, onDismiss = { showEditDialog.value = false }) { newValue ->
-            when (editingField.value) {
-                "Username" -> username.value = newValue
-                "Email" -> email.value = newValue
-                "Timezone" -> timezoneCode.value = newValue
+        if (targetEditMode.value == CurrentEditMode.TIMEZONE) {
+            EditTimezoneDialog(editingField.value,
+                initialEditValue.value,
+                onDismiss = { showEditDialog.value = false },
+                onSave = {
+                    timezoneCode.value = it
+                    showEditDialog.value = false
+                })
+        } else {
+            EditStringDialog(
+                editingField.value,
+                initialEditValue.value,
+                onDismiss = { showEditDialog.value = false }) { newValue ->
+                when (editingField.value) {
+                    "Username" -> username.value = newValue
+                    "Email" -> email.value = newValue
+                }
+                showEditDialog.value = false
             }
         }
     }
