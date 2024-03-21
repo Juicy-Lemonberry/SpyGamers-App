@@ -17,9 +17,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.spygamers.Screen
-import com.example.spygamers.components.AppBar
-import com.example.spygamers.components.DrawerBody
-import com.example.spygamers.components.DrawerHeader
+import com.example.spygamers.components.appbar.AppBar
+import com.example.spygamers.components.appbar.DrawerBody
+import com.example.spygamers.components.appbar.DrawerHeader
 import com.example.spygamers.controllers.GamerViewModel
 import com.example.spygamers.utils.generateDefaultDrawerItems
 import com.example.spygamers.utils.handleDrawerItemClicked

@@ -33,9 +33,9 @@ import androidx.navigation.NavController
 import com.example.spygamers.controllers.GamerViewModel
 import com.example.spygamers.R
 import com.example.spygamers.Screen
-import com.example.spygamers.components.AppBar
-import com.example.spygamers.components.DrawerBody
-import com.example.spygamers.components.DrawerHeader
+import com.example.spygamers.components.appbar.AppBar
+import com.example.spygamers.components.appbar.DrawerBody
+import com.example.spygamers.components.appbar.DrawerHeader
 import com.example.spygamers.models.Friendship
 import com.example.spygamers.services.AuthOnlyBody
 import com.example.spygamers.services.ServiceFactory

@@ -6,7 +6,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -14,8 +13,6 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
@@ -35,14 +32,12 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.example.spygamers.R
 import com.example.spygamers.Screen
-import com.example.spygamers.components.AppBar
-import com.example.spygamers.components.DrawerBody
-import com.example.spygamers.components.DrawerHeader
+import com.example.spygamers.components.appbar.AppBar
+import com.example.spygamers.components.appbar.DrawerBody
+import com.example.spygamers.components.appbar.DrawerHeader
 import com.example.spygamers.controllers.GamerViewModel
 import com.example.spygamers.models.RecommendedFriend
 import com.example.spygamers.services.ServiceFactory
-import com.example.spygamers.services.friendship.AddFriendBody
-import com.example.spygamers.services.friendship.RemoveFriendBody
 import com.example.spygamers.services.recommendations.FriendRequestBody
 import com.example.spygamers.services.recommendations.FriendsRecommendationBody
 import com.example.spygamers.utils.generateDefaultDrawerItems

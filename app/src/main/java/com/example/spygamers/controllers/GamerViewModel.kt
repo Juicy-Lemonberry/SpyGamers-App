@@ -27,6 +27,9 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
 
     private val serviceFactory = ServiceFactory();
 
+    private val _targetViewingAccountID = MutableStateFlow<Int>(-1)
+    val targetViewingAccountID: StateFlow<Int> = _targetViewingAccountID
+
     init {
         viewModelScope.launch {
             _isInitializing.value = true
@@ -67,6 +70,10 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
         _accountID.value = responseBody.result.id;
     }
     //#endregion
+
+    fun setViewingUserAccount(accountID: Int) {
+        _targetViewingAccountID.value = accountID;
+    }
 
     /**
      * Call this function to check against the backend server,

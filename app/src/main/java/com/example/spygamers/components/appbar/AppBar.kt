@@ -1,4 +1,4 @@
-package com.example.spygamers.components
+package com.example.spygamers.components.appbar
 
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
