@@ -1,5 +1,6 @@
 package com.example.spygamers.screens.viewprofile
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -55,6 +56,7 @@ fun GamePreferenceSection(
     }
 
     for (preference in gamePreferences) {
+        Log.v("GamePreferenceSection", "CREATE ROW: ${preference.id}")
         GamePreferenceRow(isSelfPreference, preference, onDeletePreferenceRequest)
     }
 }
@@ -65,7 +67,7 @@ private fun GamePreferenceRow(
     gamePreference: GamePreference,
     onDeletePreferenceRequest: (GamePreference) -> Unit
 ) {
-    if (isSelfPreference) {
+    if (!isSelfPreference) {
         Column(modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)) {

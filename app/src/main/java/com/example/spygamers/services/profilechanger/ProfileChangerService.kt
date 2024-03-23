@@ -3,7 +3,7 @@ package com.example.spygamers.services.profilechanger
 import com.example.spygamers.services.StatusOnlyResponse
 import retrofit2.Response
 import retrofit2.http.Body
-import retrofit2.http.DELETE
+import retrofit2.http.HTTP
 import retrofit2.http.POST
 import retrofit2.http.PUT
 
@@ -19,7 +19,7 @@ interface ProfileChangerService {
         @Body user: CreatePreferenceBody
     ): Response<StatusOnlyResponse>
 
-    @DELETE("http://spygamers.servehttp.com:44414/app-api/account/delete-game-preference")
+    @HTTP(method = "DELETE", path = "http://spygamers.servehttp.com:44414/app-api/account/delete-game-preference", hasBody = true)
     suspend fun deleteGamePreference(
         @Body user: DeletePreferenceBody
     ): Response<StatusOnlyResponse>

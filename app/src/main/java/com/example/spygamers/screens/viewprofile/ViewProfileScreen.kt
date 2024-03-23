@@ -29,12 +29,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.spygamers.components.appbar.AppBar
-import com.example.spygamers.components.dialogs.EditStringDialog
-import com.example.spygamers.components.dialogs.EditTimezoneDialog
 import com.example.spygamers.components.EditableField
 import com.example.spygamers.components.NonEditableField
+import com.example.spygamers.components.appbar.AppBar
 import com.example.spygamers.components.dialogs.ConfirmDialog
+import com.example.spygamers.components.dialogs.EditStringDialog
+import com.example.spygamers.components.dialogs.EditTimezoneDialog
 import com.example.spygamers.controllers.GamerViewModel
 import com.example.spygamers.models.GamePreference
 import com.example.spygamers.models.UserAccount
@@ -48,7 +48,6 @@ import com.example.spygamers.services.profilechanger.DeletePreferenceBody
 import com.example.spygamers.services.profilechanger.ProfileChangerService
 import com.example.spygamers.services.profilesearch.ProfileSearchService
 import com.example.spygamers.utils.toTimezoneOffset
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import java.text.DateFormat.getDateInstance
 import java.util.Date
@@ -101,7 +100,6 @@ private fun MainBody(
     val email = rememberSaveable() { mutableStateOf("") }
     val timezoneCode = rememberSaveable() { mutableStateOf("") }
     val dateCreated = rememberSaveable() { mutableStateOf(Date()) }
-    val gamePreferences = rememberSaveable() { mutableListOf<GamePreference>() }
 
     // State fields to determine if viewing self account or not.
     // (To determine if we should allow edits on profile...)
@@ -135,9 +133,9 @@ private fun MainBody(
         }
 
         val fetchedPreferences = getGamePreferences(context, accountID);
-        fetchedPreferences?.let {
-            gamePreferences.clear()
-            gamePreferences.addAll(it)
+        fetchedPreferences?.let{
+            Log.d("fetchedPreferences", "SIZE : ${fetchedPreferences.size}")
+            viewModel.setGamePreferences(it)
         }
         isLoading.value = false
     }
@@ -174,7 +172,7 @@ private fun MainBody(
                 Divider()
                 GamePreferenceSection(
                     isViewingSelf,
-                    gamePreferences,
+                    viewModel.gamePreferences,
                     onAddPreferenceRequest = {
                         targetEditMode.value = CurrentEditMode.GAME_PREFERENCE
                     },
@@ -193,7 +191,7 @@ private fun MainBody(
         return;
     }
 
-    if (targetEditMode.value == CurrentEditMode.GAME_PREFERENCE && deletingPreferenceID.intValue >= 0) {
+    if (targetEditMode.value == CurrentEditMode.GAME_PREFERENCE && deletingPreferenceName.value.isNotEmpty()) {
         ConfirmDialog(textContent = "Deleting Game Preference: $deletingPreferenceName",
             onDismiss = {
                 targetEditMode.value = CurrentEditMode.NONE
@@ -201,7 +199,7 @@ private fun MainBody(
             onConfirm = {
                 coroutineScope.launch {
                     deleteGamePreference(context, sessionToken, deletingPreferenceID.intValue)
-                    deletingPreferenceID.intValue = -1
+                    deletingPreferenceName.value = ""
                     targetEditMode.value = CurrentEditMode.NONE
                 }
             }
@@ -309,6 +307,7 @@ private suspend fun deleteGamePreference(context: Context, authToken: String, pr
 }
 
 private suspend fun getGamePreferences(context: Context, accountID: Int): List<GamePreference>? {
+    Log.d("getGamePreferences", "Account ID: $accountID")
     val service = ServiceFactory().createService(ProfileSearchService::class.java)
     val response = service.getGamePreferences(accountID);
 
@@ -317,15 +316,16 @@ private suspend fun getGamePreferences(context: Context, accountID: Int): List<G
         Toast.makeText(context, "Failed to fetch game preferences!", Toast.LENGTH_SHORT).show()
         return null
     }
+    Log.d("getGamePreferences", "SUCCESS")
 
     val responseBody = response.body()!!
+    Log.w("ViewProfileScreen", "STATUS :: ${responseBody.status}")
     if (responseBody.status != "SUCCESS") {
-        Log.w("ViewProfileScreen", "STATUS :: ${responseBody.status}")
         Toast.makeText(context, "Failed to fetch game preferences!", Toast.LENGTH_SHORT).show()
         return null
     }
 
-    return responseBody.result;
+    return responseBody.preferences;
 }
 
 private suspend fun getSelfProfileInformation(context: Context, authToken: String): FullAccountData? {
