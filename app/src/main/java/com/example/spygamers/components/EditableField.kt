@@ -10,15 +10,21 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun EditableField(label: String, value: String, onEdit: () -> Unit) {
+fun EditableField(
+    label: String,
+    value: String,
+    labelTextStyle: TextStyle = MaterialTheme.typography.subtitle2,
+    onEdit: () -> Unit = {}
+) {
     Column(modifier = Modifier
         .fillMaxWidth()
         .clickable { onEdit() }
         .padding(16.dp)) {
-        Text(text = label, style = MaterialTheme.typography.subtitle2)
+        Text(text = label, style = labelTextStyle)
         Spacer(modifier = Modifier.height(4.dp))
         Text(text = value, style = MaterialTheme.typography.body1)
         Spacer(modifier = Modifier.height(2.dp))

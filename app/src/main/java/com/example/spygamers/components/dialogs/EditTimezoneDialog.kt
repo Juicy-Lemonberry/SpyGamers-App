@@ -1,4 +1,4 @@
-package com.example.spygamers.components
+package com.example.spygamers.components.dialogs
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.AlertDialog

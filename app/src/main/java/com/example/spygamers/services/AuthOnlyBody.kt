@@ -1,5 +1,8 @@
 package com.example.spygamers.services
 
+import com.google.gson.annotations.SerializedName
+
 data class AuthOnlyBody (
-    val auth_token: String,
-)
+    @SerializedName("auth_token")
+    override val authToken: String,
+) : AuthTokenContract

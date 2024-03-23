@@ -10,4 +10,8 @@ interface ProfileSearchService {
         @Query("account_id") accountID: Int
     ): Response<GetProfileResponse>
 
+    @GET("http://spygamers.servehttp.com:44414/app-api/account/get-game-preferences")
+    suspend fun getGamePreferences(
+        @Query("target_username_id") accountID: Int
+    ): Response<GetGamePreferencesResponse>
 }

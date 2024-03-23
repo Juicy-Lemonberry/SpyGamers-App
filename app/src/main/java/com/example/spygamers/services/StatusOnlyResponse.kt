@@ -1,5 +1,5 @@
 package com.example.spygamers.services
 
 data class StatusOnlyResponse(
-    val status: String,
-)
+    override val status: String
+) : ResponseContract
