@@ -25,8 +25,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import kotlinx.coroutines.launch
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.layout.Box
@@ -42,9 +40,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
 import com.example.spygamers.controllers.GamerViewModel
 import com.example.spygamers.Screen
-import com.example.spygamers.components.AppBar
-import com.example.spygamers.components.DrawerBody
-import com.example.spygamers.components.DrawerHeader
+import com.example.spygamers.components.appbar.AppBar
+import com.example.spygamers.components.appbar.DrawerBody
+import com.example.spygamers.components.appbar.DrawerHeader
 import com.example.spygamers.services.ServiceFactory
 import com.example.spygamers.services.profilechanger.ChangeUsernameBody
 import com.example.spygamers.utils.generateDefaultDrawerItems

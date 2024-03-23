@@ -1,4 +1,4 @@
-package com.example.spygamers.components
+package com.example.spygamers.components.appbar
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

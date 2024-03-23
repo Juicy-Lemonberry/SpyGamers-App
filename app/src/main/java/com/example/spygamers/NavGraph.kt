@@ -12,6 +12,7 @@ import com.example.spygamers.screens.InitialScreen
 import com.example.spygamers.screens.LoginScreen
 import com.example.spygamers.screens.register.RegisterScreen
 import com.example.spygamers.screens.SettingScreen
+import com.example.spygamers.screens.viewprofile.ViewProfileScreen
 
 sealed class Screen(val route: String) {
     /**
@@ -47,6 +48,11 @@ fun NavGraph(
         composable(route = Screen.RegisterScreen.route) {
             RegisterScreen(navController = navController, viewModel)
         }
+
+        composable(route = Screen.ViewProfileScreen.route) {
+            ViewProfileScreen(navController = navController, viewModel = viewModel)
+        }
+
         composable(route = Screen.SettingScreen.route) {
             SettingScreen(navController = navController, viewModel)
         }

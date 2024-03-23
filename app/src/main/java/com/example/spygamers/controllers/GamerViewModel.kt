@@ -1,10 +1,12 @@
 package com.example.spygamers.controllers
 
 import android.util.Log
+import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.spygamers.db.schemas.Gamer
 import com.example.spygamers.db.GamerRepository
+import com.example.spygamers.db.schemas.Gamer
+import com.example.spygamers.models.GamePreference
 import com.example.spygamers.services.AuthOnlyBody
 import com.example.spygamers.services.ServiceFactory
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,6 +28,15 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
     val username: StateFlow<String> = _username
 
     private val serviceFactory = ServiceFactory();
+
+    //#region Profile Viewing...
+    // TODO: Refactor into 1 new ViewModel?
+    private val _targetViewingAccountID = MutableStateFlow<Int>(-1)
+    val targetViewingAccountID: StateFlow<Int> = _targetViewingAccountID
+
+    private val _gamePreferences = mutableStateListOf<GamePreference>()
+    val gamePreferences: List<GamePreference>  = _gamePreferences
+    //#endregion
 
     init {
         viewModelScope.launch {
@@ -67,6 +78,10 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
         _accountID.value = responseBody.result.id;
     }
     //#endregion
+
+    fun setViewingUserAccount(accountID: Int) {
+        _targetViewingAccountID.value = accountID;
+    }
 
     /**
      * Call this function to check against the backend server,
@@ -126,6 +141,14 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
 
         viewModelScope.launch {
             gamerRepository.insertOrUpdateGamer(Gamer(sessionToken))
+        }
+    }
+
+    fun setGamePreferences(preferences: Collection<GamePreference>) {
+        _gamePreferences.clear()
+        preferences.forEach {
+            Log.d("setGamePreferences", "ADD: ${it.id}, ${it.name}")
+            _gamePreferences.add(it)
         }
     }
 }

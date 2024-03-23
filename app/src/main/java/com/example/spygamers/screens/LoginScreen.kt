@@ -7,23 +7,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
-import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
@@ -33,7 +24,6 @@ import com.example.spygamers.components.authform.PasswordTextField
 import com.example.spygamers.components.authform.UsernameTextField
 import com.example.spygamers.components.authform.isValidPassword
 import com.example.spygamers.components.authform.isValidUsername
-import com.example.spygamers.screens.register.isValidEmail
 import com.example.spygamers.services.ServiceFactory
 import com.example.spygamers.services.authentication.UserLoginBody
 import kotlinx.coroutines.launch
@@ -97,11 +87,11 @@ fun LoginScreen(
                     val responseBody = response.body()!!;
                     if (responseBody.status == "SUCCESS") {
                         // TODO: Toast, Short Delay, Login...
-                        val sessionToken = responseBody.session_token!!
+                        val sessionToken = responseBody.sessionToken!!
                         viewModel.upsertUserData(
                             sessionToken,
                             filledUsername,
-                            responseBody.account_id!!
+                            responseBody.accountID!!
                         )
                         navController.navigate(Screen.HomeScreen.route)
                         return@launch
