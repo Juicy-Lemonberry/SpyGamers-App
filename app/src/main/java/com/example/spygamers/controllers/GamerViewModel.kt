@@ -29,15 +29,6 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
 
     private val serviceFactory = ServiceFactory();
 
-    //#region Profile Viewing...
-    // TODO: Refactor into 1 new ViewModel?
-    private val _targetViewingAccountID = MutableStateFlow<Int>(-1)
-    val targetViewingAccountID: StateFlow<Int> = _targetViewingAccountID
-
-    private val _gamePreferences = mutableStateListOf<GamePreference>()
-    val gamePreferences: List<GamePreference>  = _gamePreferences
-    //#endregion
-
     init {
         viewModelScope.launch {
             _isInitializing.value = true
@@ -144,11 +135,31 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
         }
     }
 
+    //#region Profile Viewing...
+    // TODO: Refactor into 1 new ViewModel?
+    private val _targetViewingAccountID = MutableStateFlow<Int>(-1)
+    val targetViewingAccountID: StateFlow<Int> = _targetViewingAccountID
+
+    private val _gamePreferences = mutableStateListOf<GamePreference>()
+    val gamePreferences: List<GamePreference>  = _gamePreferences
+
     fun setGamePreferences(preferences: Collection<GamePreference>) {
         _gamePreferences.clear()
         preferences.forEach {
-            Log.d("setGamePreferences", "ADD: ${it.id}, ${it.name}")
-            _gamePreferences.add(it)
+            addGamePreference(it)
         }
     }
+
+    fun addGamePreference(preference: GamePreference) {
+        Log.d("addGamePreference", "ADD: ${preference.id}, ${preference.name}")
+        _gamePreferences.add(preference)
+    }
+
+    fun removeGamePreferenceByID(id: Int) {
+        Log.d("addGamePreference", "REMOVE: $id")
+        _gamePreferences.removeIf {
+            it.id == id
+        }
+    }
+    //#endregion
 }

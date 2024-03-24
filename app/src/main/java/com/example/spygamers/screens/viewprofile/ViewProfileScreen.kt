@@ -198,9 +198,13 @@ private fun MainBody(
             },
             onConfirm = {
                 coroutineScope.launch {
-                    deleteGamePreference(context, sessionToken, deletingPreferenceID.intValue)
+                    val success = deleteGamePreference(context, sessionToken, deletingPreferenceID.intValue)
                     deletingPreferenceName.value = ""
                     targetEditMode.value = CurrentEditMode.NONE
+
+                    if (success) {
+                        viewModel.removeGamePreferenceByID(deletingPreferenceID.intValue)
+                    }
                 }
             }
         )
@@ -230,6 +234,7 @@ private fun MainBody(
                     coroutineScope.launch {
                         createGamePreference(context, sessionToken, newValue)
                         targetEditMode.value = CurrentEditMode.NONE
+                        fetchPreferences(viewModel, context, accountID)
                     }
                 }
             }
@@ -239,6 +244,14 @@ private fun MainBody(
 
 //#region Utils
 // TODO: Refactor...
+
+private suspend fun fetchPreferences(viewModel: GamerViewModel, context: Context, accountID: Int) {
+    val fetchedPreferences = getGamePreferences(context, accountID);
+    fetchedPreferences?.let{
+        Log.d("fetchedPreferences", "SIZE : ${fetchedPreferences.size}")
+        viewModel.setGamePreferences(it)
+    }
+}
 
 private suspend fun changeUsername(context: Context, authToken: String, newUsername: String) {
     val service = ServiceFactory().createService(ProfileChangerService::class.java)
@@ -274,18 +287,16 @@ private suspend fun createGamePreference(context: Context, authToken: String, pr
     if (!response.isSuccessful) {
         Log.w("ViewProfileScreen", response.errorBody().toString())
         Toast.makeText(context, "Failed to create game preference!", Toast.LENGTH_SHORT).show()
-        return
     }
 
     val responseBody = response.body()!!
     if (responseBody.status != "SUCCESS") {
         Log.w("ViewProfileScreen", "STATUS :: ${responseBody.status}")
         Toast.makeText(context, "Failed to create game preference!", Toast.LENGTH_SHORT).show()
-        return
     }
 }
 
-private suspend fun deleteGamePreference(context: Context, authToken: String, preferenceID: Int) {
+private suspend fun deleteGamePreference(context: Context, authToken: String, preferenceID: Int): Boolean {
     val service = ServiceFactory().createService(ProfileChangerService::class.java)
     val response = service.deleteGamePreference(DeletePreferenceBody(
         authToken,
@@ -295,15 +306,17 @@ private suspend fun deleteGamePreference(context: Context, authToken: String, pr
     if (!response.isSuccessful) {
         Log.w("ViewProfileScreen", response.errorBody().toString())
         Toast.makeText(context, "Failed to delete game preference!", Toast.LENGTH_SHORT).show()
-        return
+        return false
     }
 
     val responseBody = response.body()!!
     if (responseBody.status != "SUCCESS") {
         Log.w("ViewProfileScreen", "STATUS :: ${responseBody.status}")
         Toast.makeText(context, "Failed to delete game preference!", Toast.LENGTH_SHORT).show()
-        return
+        return false
     }
+
+    return true
 }
 
 private suspend fun getGamePreferences(context: Context, accountID: Int): List<GamePreference>? {
