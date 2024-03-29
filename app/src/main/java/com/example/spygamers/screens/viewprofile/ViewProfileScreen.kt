@@ -77,6 +77,10 @@ fun ViewProfileScreen(
     }
 }
 
+/**
+ * Used when viewing self profile.
+ * Represents what the user is currently targetting to edit...
+ */
 private enum class CurrentEditMode(val mode: String) {
     NONE("NONE"),
     USERNAME("USERNAME"),

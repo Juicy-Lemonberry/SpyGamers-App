@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.spygamers.db.GamerRepository
 import com.example.spygamers.db.schemas.Gamer
 import com.example.spygamers.models.GamePreference
+import com.example.spygamers.models.RecommendedFriend
 import com.example.spygamers.services.AuthOnlyBody
 import com.example.spygamers.services.ServiceFactory
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -150,7 +151,7 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
         }
     }
 
-    fun addGamePreference(preference: GamePreference) {
+    private fun addGamePreference(preference: GamePreference) {
         Log.d("addGamePreference", "ADD: ${preference.id}, ${preference.name}")
         _gamePreferences.add(preference)
     }
@@ -158,6 +159,26 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
     fun removeGamePreferenceByID(id: Int) {
         Log.d("addGamePreference", "REMOVE: $id")
         _gamePreferences.removeIf {
+            it.id == id
+        }
+    }
+    //#endregion
+
+    //#region Friends Recommendation
+    private val _recommendedFriends = mutableStateListOf<RecommendedFriend>()
+    val recommendedFriends: List<RecommendedFriend>  = _recommendedFriends
+
+    fun setRecommendedFriends(recommendations: Collection<RecommendedFriend>) {
+        _recommendedFriends.clear()
+        recommendations.forEach {
+            Log.d("setRecommendedFriends", "ADD: ${it.id}, ${it.username}")
+            _recommendedFriends.add(it)
+        }
+    }
+
+    fun removeFriendRecommendationsByID(id: Int) {
+        Log.d("removeFriendRecommendationsByID", "REMOVE: $id")
+        _recommendedFriends.removeIf {
             it.id == id
         }
     }
