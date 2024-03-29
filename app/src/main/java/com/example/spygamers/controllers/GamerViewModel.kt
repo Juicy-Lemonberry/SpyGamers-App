@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.spygamers.db.GamerRepository
 import com.example.spygamers.db.schemas.Gamer
 import com.example.spygamers.models.GamePreference
+import com.example.spygamers.models.RecommendedFriend
 import com.example.spygamers.services.AuthOnlyBody
 import com.example.spygamers.services.ServiceFactory
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,15 +29,6 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
     val username: StateFlow<String> = _username
 
     private val serviceFactory = ServiceFactory();
-
-    //#region Profile Viewing...
-    // TODO: Refactor into 1 new ViewModel?
-    private val _targetViewingAccountID = MutableStateFlow<Int>(-1)
-    val targetViewingAccountID: StateFlow<Int> = _targetViewingAccountID
-
-    private val _gamePreferences = mutableStateListOf<GamePreference>()
-    val gamePreferences: List<GamePreference>  = _gamePreferences
-    //#endregion
 
     init {
         viewModelScope.launch {
@@ -144,11 +136,51 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
         }
     }
 
+    //#region Profile Viewing...
+    // TODO: Refactor into 1 new ViewModel?
+    private val _targetViewingAccountID = MutableStateFlow<Int>(-1)
+    val targetViewingAccountID: StateFlow<Int> = _targetViewingAccountID
+
+    private val _gamePreferences = mutableStateListOf<GamePreference>()
+    val gamePreferences: List<GamePreference>  = _gamePreferences
+
     fun setGamePreferences(preferences: Collection<GamePreference>) {
         _gamePreferences.clear()
         preferences.forEach {
-            Log.d("setGamePreferences", "ADD: ${it.id}, ${it.name}")
-            _gamePreferences.add(it)
+            addGamePreference(it)
         }
     }
+
+    private fun addGamePreference(preference: GamePreference) {
+        Log.d("addGamePreference", "ADD: ${preference.id}, ${preference.name}")
+        _gamePreferences.add(preference)
+    }
+
+    fun removeGamePreferenceByID(id: Int) {
+        Log.d("addGamePreference", "REMOVE: $id")
+        _gamePreferences.removeIf {
+            it.id == id
+        }
+    }
+    //#endregion
+
+    //#region Friends Recommendation
+    private val _recommendedFriends = mutableStateListOf<RecommendedFriend>()
+    val recommendedFriends: List<RecommendedFriend>  = _recommendedFriends
+
+    fun setRecommendedFriends(recommendations: Collection<RecommendedFriend>) {
+        _recommendedFriends.clear()
+        recommendations.forEach {
+            Log.d("setRecommendedFriends", "ADD: ${it.id}, ${it.username}")
+            _recommendedFriends.add(it)
+        }
+    }
+
+    fun removeFriendRecommendationsByID(id: Int) {
+        Log.d("removeFriendRecommendationsByID", "REMOVE: $id")
+        _recommendedFriends.removeIf {
+            it.id == id
+        }
+    }
+    //#endregion
 }

@@ -6,7 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.spygamers.controllers.GamerViewModel
 import com.example.spygamers.screens.FriendListScreen
-import com.example.spygamers.screens.FriendRecommendationScreen
+import com.example.spygamers.screens.friendrecommendation.FriendRecommendationScreen
 import com.example.spygamers.screens.HomeScreen
 import com.example.spygamers.screens.InitialScreen
 import com.example.spygamers.screens.LoginScreen
