@@ -145,7 +145,7 @@ private fun MainBody(
                             )
                         )
                         if (response.isSuccessful) {
-                            removeIncomingRequest(accountID)
+                            removeAcceptedFriend(accountID)
                         } else {
                             Toast.makeText(context, "Failed to remove friend...", Toast.LENGTH_SHORT).show()
                             Log.e(
@@ -191,6 +191,7 @@ private fun MainBody(
                                 )
                             )
                             if (response.isSuccessful) {
+                                addFriend(accountID)
                                 removeIncomingRequest(accountID)
                             } else {
                                 Toast.makeText(context, "Failed to reject request...", Toast.LENGTH_SHORT).show()
@@ -215,7 +216,7 @@ private fun MainBody(
                             )
                         )
                         if (response.isSuccessful) {
-                            removeIncomingRequest(accountID)
+                            removeOutgoingRequest(accountID)
                         } else {
                             Toast.makeText(
                                 context,
