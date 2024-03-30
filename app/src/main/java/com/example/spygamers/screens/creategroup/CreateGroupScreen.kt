@@ -38,12 +38,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
+import com.example.spygamers.Screen
 import com.example.spygamers.components.appbar.AppBar
 import com.example.spygamers.controllers.GamerViewModel
 import com.example.spygamers.models.Friendship
 import com.example.spygamers.services.AuthOnlyBody
 import com.example.spygamers.services.ServiceFactory
 import com.example.spygamers.services.friendship.FriendshipService
+import com.example.spygamers.services.group.GroupService
+import com.example.spygamers.services.group.body.CreateGroupBody
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
@@ -177,7 +181,41 @@ private fun MainBody(
                     return@FloatingActionButton
                 }
 
-                // TODO: Service to create group...
+                viewModel.viewModelScope.launch(Dispatchers.IO) {
+                    try {
+                        val service = serviceFactory.createService(GroupService::class.java)
+                        val response = service.createGroup(
+                            CreateGroupBody(
+                                authToken = sessionToken,
+                                groupName = groupName,
+                                groupDescription = groupDescription,
+                                isPublic = isPublic
+                            )
+                        )
+
+                        if (!response.isSuccessful) {
+                            Log.e("CreateGroupScreen.createGroup", "Failed to create group :: $response")
+                            return@launch
+                        }
+
+                        // Fetch body response, ensure its not blank...
+                        val responseBody = response.body()
+                        if (responseBody == null) {
+                            Log.e("CreateGroupScreen.createGroup", "Response body is null")
+                            return@launch
+                        }
+
+                        // If group created successfully, populate in ViewModel,
+                        // then redirect to the group chat itself...
+                        val groupID = responseBody.groupID
+                        viewModel.setTargetGroup(groupID, groupName, groupDescription, isPublic)
+
+                        navController.popBackStack()
+                        navController.navigate(Screen.GroupMessageScreen.route)
+                    } catch (e: Exception) {
+                        Log.e("DirectMessageScreen.sendMessageToUser", "Error sending message :: ", e)
+                    }
+                }
             },
             modifier = Modifier.padding(16.dp).align(Alignment.BottomEnd)
         ) {

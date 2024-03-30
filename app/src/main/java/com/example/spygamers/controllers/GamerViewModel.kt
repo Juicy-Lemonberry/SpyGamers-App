@@ -6,14 +6,17 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.spygamers.db.GamerRepository
 import com.example.spygamers.db.schemas.Gamer
-import com.example.spygamers.models.messaging.DirectMessage
 import com.example.spygamers.models.GamePreference
 import com.example.spygamers.models.RecommendedFriend
+import com.example.spygamers.models.messaging.DirectMessage
+import com.example.spygamers.models.messaging.GroupMessage
 import com.example.spygamers.services.AuthOnlyBody
 import com.example.spygamers.services.ServiceFactory
 import com.example.spygamers.services.authentication.AuthenticationService
 import com.example.spygamers.services.directmessaging.DirectMessagingService
 import com.example.spygamers.services.directmessaging.GetDirectMessagesBody
+import com.example.spygamers.services.group.GroupService
+import com.example.spygamers.services.group.body.GetGroupMessagesBody
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -244,21 +247,75 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
     private val _targetGroupID = MutableStateFlow<Int>(-1)
     val targetGroupID: StateFlow<Int> = _targetGroupID
 
-    private val _groupMessages = mutableStateListOf<DirectMessage>()
-    val groupMessages: List<DirectMessage>  = _groupMessages
+    private val _targetGroupName = MutableStateFlow<String>("")
+    val targetGroupName: StateFlow<String> = _targetGroupName
 
-    fun setTargetGroupID(groupID: Int) {
+    private val _targetGroupDescription = MutableStateFlow<String>("")
+    val targetGroupDescription: StateFlow<String> = _targetGroupDescription
+
+    private val _targetGroupPublicity = MutableStateFlow<Boolean>(false)
+    val targetGroupPublicity: StateFlow<Boolean> = _targetGroupPublicity
+
+    private val _groupMessages = mutableStateListOf<GroupMessage>()
+    val groupMessages: List<GroupMessage>  = _groupMessages
+
+    fun setTargetGroup(
+        groupID: Int,
+        groupName: String,
+        groupDescription: String,
+        groupPublicity: Boolean
+    ) {
         _targetGroupID.value = groupID
+        _targetGroupName.value = groupName
+        _targetGroupDescription.value = groupDescription
+        _targetGroupPublicity.value = groupPublicity
         this.viewModelScope.launch(Dispatchers.IO) {
-            fetchTargetDirectMessages()
+            fetchTargetGroupMessages()
         }
     }
 
-    fun fetchTargetGroupMessages(){
+    suspend fun fetchTargetGroupMessages(startID: Int? = null) {
+        val service = serviceFactory.createService(GroupService::class.java)
 
+        val response = service.getGroupMessages(
+            GetGroupMessagesBody(
+                authToken = _sessionToken.value,
+                groupID = _targetGroupID.value,
+                startID = startID,
+                chunkSize = 75
+            )
+        )
+
+        if (!response.isSuccessful) {
+            Log.e(
+                "GamerViewModel.fetchTargetGroupMessages",
+                "Failed to fetch messages :: $response"
+            )
+            return
+        }
+
+        // Fetch body response, ensure its not blank...
+        val responseBody = response.body()
+        if (responseBody == null) {
+            Log.e("GamerViewModel.fetchTargetGroupMessages", "Response body is null")
+            return
+        }
+
+        setGroupMessages(responseBody.result)
     }
 
+    private fun setGroupMessages(groupMessages: Collection<GroupMessage>) {
+        _groupMessages.clear()
+        // NOTE: Reversed since in actual GUI, the first element should be at the bottom of the message list...
+        groupMessages.reversed().forEach {
+            addGroupMessage(it)
+        }
+    }
 
+    fun addGroupMessage(newMessage: GroupMessage){
+        Log.d("setGroupMessages", "ADD: ${newMessage.messageID}")
+        _groupMessages.add(newMessage)
+    }
     //#endregion
 
     init {
