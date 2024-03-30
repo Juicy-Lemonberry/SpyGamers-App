@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.spygamers.db.GamerRepository
 import com.example.spygamers.db.schemas.Gamer
-import com.example.spygamers.models.DirectMessage
+import com.example.spygamers.models.messaging.DirectMessage
 import com.example.spygamers.models.GamePreference
 import com.example.spygamers.models.RecommendedFriend
 import com.example.spygamers.services.AuthOnlyBody
@@ -238,6 +238,27 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
             _directMessages.add(it)
         }
     }
+    //#endregion
+
+    //#region Group Messaging
+    private val _targetGroupID = MutableStateFlow<Int>(-1)
+    val targetGroupID: StateFlow<Int> = _targetGroupID
+
+    private val _groupMessages = mutableStateListOf<DirectMessage>()
+    val groupMessages: List<DirectMessage>  = _groupMessages
+
+    fun setTargetGroupID(groupID: Int) {
+        _targetGroupID.value = groupID
+        this.viewModelScope.launch(Dispatchers.IO) {
+            fetchTargetDirectMessages()
+        }
+    }
+
+    fun fetchTargetGroupMessages(){
+
+    }
+
+
     //#endregion
 
     init {
