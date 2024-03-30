@@ -30,7 +30,7 @@ import com.example.spygamers.models.Friendship
 fun FriendsTabContent(
     acceptedFriends: List<Friendship>,
     onRemoveFriend: (targetFriendID: Int) -> Unit,
-    onFriendSelected: (selectedFriendID: Int) -> Unit
+    onFriendSelected: (selected: Friendship) -> Unit
 ) {
     if (acceptedFriends.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -58,7 +58,7 @@ fun FriendsTabContent(
                 // Name of friend, with onclick callback to selected...
                 Column(modifier = Modifier
                     .fillMaxWidth()
-                    .clickable{onFriendSelected(friend.accountID)}
+                    .clickable{onFriendSelected(friend)}
                     .padding(8.dp)
                     .weight(4f)
                 ) {

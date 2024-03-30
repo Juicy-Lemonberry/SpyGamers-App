@@ -25,6 +25,7 @@ sealed class Screen(val route: String) {
     object RegisterScreen : Screen(route = "Register_Screen")
     object SettingScreen : Screen(route = "Setting_Screen")
     object FriendListScreen : Screen(route = "FriendList_Screen")
+    object GroupListScreen : Screen(route = "GroupList_Screen")
     object HomeScreen : Screen(route = "Home_Screen")
     object FriendRecommendationScreen : Screen(route = "FriendRecommendation_Screen")
 

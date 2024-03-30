@@ -1,6 +1,8 @@
 package com.example.spygamers.utils
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import com.example.spygamers.R
@@ -9,6 +11,13 @@ import com.example.spygamers.models.DrawerMenuItem
 
 fun generateDefaultDrawerItems(currentSelectedItem: Screen? = null): List<DrawerMenuItem> {
     return listOf(
+        DrawerMenuItem(
+            id = Screen.HomeScreen.route,
+            title = "Home",
+            contentDescription = "Home Screen",
+            icon = ImageResource.Vector(Icons.Default.Home),
+            isSelected = currentSelectedItem?.route === Screen.HomeScreen.route
+        ),
         DrawerMenuItem(
             id = Screen.ViewProfileScreen.route,
             title = "View Profile",
@@ -22,6 +31,14 @@ fun generateDefaultDrawerItems(currentSelectedItem: Screen? = null): List<Drawer
             contentDescription = "Go View Your Friend Lists",
             icon = ImageResource.Drawable(R.drawable.ic_friends),
             isSelected = currentSelectedItem?.route === Screen.FriendListScreen.route
+        ),
+        DrawerMenuItem(
+            id = Screen.GroupListScreen.route,
+            title = "Groups",
+            contentDescription = "Go View Your Groups Lists",
+            // TODO: Find a suitable icon....
+            icon =ImageResource.Vector(Icons.Default.List),
+            isSelected = currentSelectedItem?.route === Screen.GroupListScreen.route
         ),
         DrawerMenuItem(
             id = Screen.CreateGroupScreen.route,

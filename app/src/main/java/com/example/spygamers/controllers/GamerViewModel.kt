@@ -188,11 +188,15 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
     private val _targetMessagingAccountID = MutableStateFlow<Int>(-1)
     val targetMessagingAccountID: StateFlow<Int> = _targetMessagingAccountID
 
+    private val _targetMessagingAccountUsername = MutableStateFlow<String>("")
+    val targetMessagingAccountUsername: StateFlow<String> = _targetMessagingAccountUsername
+
     private val _directMessages = mutableStateListOf<DirectMessage>()
     val directMessages: List<DirectMessage>  = _directMessages
 
-    fun setDirectMessageTarget(accountID: Int) {
+    fun setDirectMessageTarget(accountID: Int, accountUsername: String) {
         _targetMessagingAccountID.value = accountID;
+        _targetMessagingAccountUsername.value = accountUsername
         this.viewModelScope.launch(Dispatchers.IO) {
             fetchTargetDirectMessages()
         }

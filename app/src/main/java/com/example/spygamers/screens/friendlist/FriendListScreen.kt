@@ -156,8 +156,8 @@ private fun MainBody(
                         }
                     }
                 },
-                onFriendSelected = {accountID ->
-                    viewModel.setDirectMessageTarget(accountID);
+                onFriendSelected = {friend ->
+                    viewModel.setDirectMessageTarget(friend.accountID, friend.username);
                     navController.navigate(Screen.DirectMessageScreen.route)
                 }
             )

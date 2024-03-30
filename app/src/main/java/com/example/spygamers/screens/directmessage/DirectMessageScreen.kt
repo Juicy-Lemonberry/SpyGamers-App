@@ -45,6 +45,7 @@ fun DirectMessageScreen(
     val scope = rememberCoroutineScope()
 
     val accountID by viewModel.accountID.collectAsState()
+    val targetAccountUsername by viewModel.targetMessagingAccountUsername.collectAsState()
 
     Scaffold(
         scaffoldState = scaffoldState,
@@ -54,7 +55,8 @@ fun DirectMessageScreen(
                     scope.launch {
                         scaffoldState.drawerState.open()
                     }
-                }
+                },
+                appBarTitle = "Conversation with $targetAccountUsername"
             )
         },
         drawerGesturesEnabled = scaffoldState.drawerState.isOpen,
