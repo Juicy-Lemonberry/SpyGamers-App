@@ -1,4 +1,4 @@
-package com.example.spygamers.screens.directmessage
+package com.example.spygamers.screens.groupmessage
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -28,16 +28,18 @@ import com.example.spygamers.components.chatting.ChatInputRow
 import com.example.spygamers.components.chatting.MessageData
 import com.example.spygamers.components.chatting.MessageRow
 import com.example.spygamers.controllers.GamerViewModel
+import com.example.spygamers.models.messaging.GroupMessage
 import com.example.spygamers.services.ServiceFactory
-import com.example.spygamers.services.directmessaging.DirectMessagingService
+import com.example.spygamers.services.group.GroupService
 import com.example.spygamers.utils.generateDefaultDrawerItems
 import com.example.spygamers.utils.handleDrawerItemClicked
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
-fun DirectMessageScreen(
+fun GroupMessageScreen(
     navController: NavController,
     viewModel: GamerViewModel
 ) {
@@ -45,8 +47,9 @@ fun DirectMessageScreen(
     val scope = rememberCoroutineScope()
 
     val accountID by viewModel.accountID.collectAsState()
-    val targetAccountUsername by viewModel.targetMessagingAccountUsername.collectAsState()
+    val groupName by viewModel.targetGroupName.collectAsState()
 
+    // TODO: On appbar title click, show list of group members...
     Scaffold(
         scaffoldState = scaffoldState,
         topBar = {
@@ -56,7 +59,7 @@ fun DirectMessageScreen(
                         scaffoldState.drawerState.open()
                     }
                 },
-                appBarTitle = "Conversation with $targetAccountUsername"
+                appBarTitle = groupName
             )
         },
         drawerGesturesEnabled = scaffoldState.drawerState.isOpen,
@@ -84,8 +87,10 @@ private fun MainBody(
     val context = LocalContext.current
 
     val currentUsername by viewModel.username.collectAsState()
-    val messages = viewModel.directMessages
+    val messages = viewModel.groupMessages
     val lazyListState = rememberLazyListState()
+
+    Log.d("GroupMessageScreen", "Message Size: ${messages.size}")
 
     // TODO: Show something like 'this is the start of ur conversation' if there are no messages...
     // TODO: Implement dynamic loading (load more messages once user hit the top of the messages list...)
@@ -98,15 +103,16 @@ private fun MainBody(
             state = lazyListState
         ) {
             items(messages.size) { index ->
-                val currentDM = messages[index]
+                val groupMessage = messages[index]
+                Log.d("GroupMessageScreen", "INDEX :: $index :: $groupMessage")
                 val messageData = MessageData(
-                    messageID = currentDM.messageID,
-                    authorUsername = currentDM.senderUsername,
-                    content = currentDM.content,
-                    timestamp = currentDM.timestamp,
-                    attachmentsID = currentDM.attachmentsID,
-                    senderIsSelf = currentDM.senderUsername == currentUsername,
-                    isDeletedMessage = currentDM.isDeleted
+                    messageID = groupMessage.messageID,
+                    authorUsername = groupMessage.senderUsername,
+                    content = groupMessage.content,
+                    timestamp = groupMessage.timestamp,
+                    attachmentsID = groupMessage.attachmentsID,
+                    senderIsSelf = groupMessage.senderUsername == currentUsername,
+                    isDeletedMessage = groupMessage.isDeleted
                 )
 
                 MessageRow(messageData)
@@ -115,7 +121,7 @@ private fun MainBody(
 
         ChatInputRow(
             onUserSendMessage = {
-                sendMessageToUser(
+                sendMessageToGroup(
                     viewModel,
                     context,
                     serviceFactory,
@@ -135,7 +141,7 @@ private fun MainBody(
     }
 }
 
-private fun sendMessageToUser(
+private fun sendMessageToGroup(
     viewModel: GamerViewModel,
     context: Context,
     serviceFactory: ServiceFactory,
@@ -145,12 +151,12 @@ private fun sendMessageToUser(
     viewModel.viewModelScope.launch(Dispatchers.IO) {
         try {
             val sessionToken = viewModel.sessionToken.value
-            val targetAccountID = viewModel.targetMessagingAccountID.value
+            val targetGroupID = viewModel.targetGroupID.value
 
-            val service = serviceFactory.createService(DirectMessagingService::class.java)
-            val response = service.sendDirectMessage(
+            val service = serviceFactory.createService(GroupService::class.java)
+            val response = service.sendMessage(
                 authToken = sessionToken,
-                targetAccountID = targetAccountID,
+                targetGroupID = targetGroupID,
                 content = content
             )
 
@@ -168,9 +174,17 @@ private fun sendMessageToUser(
                 return@launch
             }
 
-            // TODO: Instead of re-fetching the messages to hydrate the list each time a new message is sent,
-            // make it dynamically populate itself instead...
-            viewModel.fetchTargetDirectMessages()
+            // Add this newly created group message to the viewModel data....
+            val newGroupMessage = GroupMessage(
+                messageID = responseBody.result.messageID,
+                senderID = viewModel.accountID.value,
+                senderUsername = viewModel.username.value,
+                content = content,
+                timestamp = responseBody.result.timestamp,
+                attachmentsID = responseBody.result.attachmentsID,
+                isDeleted = false
+            )
+            viewModel.addGroupMessage(newGroupMessage);
         } catch (e: Exception) {
             Log.e("DirectMessageScreen.sendMessageToUser", "Error sending message :: ", e)
         }

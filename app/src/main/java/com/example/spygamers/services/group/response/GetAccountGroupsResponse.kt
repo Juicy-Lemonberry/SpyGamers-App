@@ -1,4 +1,4 @@
-package com.example.spygamers.services.group
+package com.example.spygamers.services.group.response
 
 data class GetAccountGroupsResponse (
     val status: String,

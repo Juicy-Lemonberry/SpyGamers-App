@@ -9,9 +9,11 @@ import com.example.spygamers.screens.HomeScreen
 import com.example.spygamers.screens.InitialScreen
 import com.example.spygamers.screens.LoginScreen
 import com.example.spygamers.screens.SettingScreen
+import com.example.spygamers.screens.creategroup.CreateGroupScreen
 import com.example.spygamers.screens.directmessage.DirectMessageScreen
 import com.example.spygamers.screens.friendlist.FriendListScreen
 import com.example.spygamers.screens.friendrecommendation.FriendRecommendationScreen
+import com.example.spygamers.screens.groupmessage.GroupMessageScreen
 import com.example.spygamers.screens.register.RegisterScreen
 import com.example.spygamers.screens.viewprofile.ViewProfileScreen
 
@@ -25,6 +27,7 @@ sealed class Screen(val route: String) {
     object RegisterScreen : Screen(route = "Register_Screen")
     object SettingScreen : Screen(route = "Setting_Screen")
     object FriendListScreen : Screen(route = "FriendList_Screen")
+    object GroupListScreen : Screen(route = "GroupList_Screen")
     object HomeScreen : Screen(route = "Home_Screen")
     object FriendRecommendationScreen : Screen(route = "FriendRecommendation_Screen")
 
@@ -33,6 +36,7 @@ sealed class Screen(val route: String) {
     object CreateGroupScreen : Screen(route = "CreateGroup_Screen")
 
     object DirectMessageScreen: Screen(route = "DirectMessage_Screen")
+    object GroupMessageScreen: Screen(route = "GroupMessaage_Screen")
 }
 
 @Composable
@@ -75,6 +79,14 @@ fun NavGraph(
 
         composable(route = Screen.DirectMessageScreen.route) {
             DirectMessageScreen(navController = navController, viewModel = viewModel)
+        }
+
+        composable(route = Screen.CreateGroupScreen.route) {
+            CreateGroupScreen(navController = navController, viewModel = viewModel)
+        }
+
+        composable(route = Screen.GroupMessageScreen.route) {
+            GroupMessageScreen(navController = navController, viewModel = viewModel)
         }
     }
 }

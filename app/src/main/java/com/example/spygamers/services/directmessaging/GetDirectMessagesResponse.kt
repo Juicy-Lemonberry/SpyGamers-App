@@ -1,6 +1,6 @@
 package com.example.spygamers.services.directmessaging
 
-import com.example.spygamers.models.DirectMessage
+import com.example.spygamers.models.messaging.DirectMessage
 
 data class GetDirectMessagesResponse(
     val status: String,

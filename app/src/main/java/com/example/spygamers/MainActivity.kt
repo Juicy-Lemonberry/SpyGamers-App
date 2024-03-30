@@ -23,11 +23,9 @@ class MainActivity : ComponentActivity() {
         )
         setContent {
             SpyGamersTheme {
-
                 // Initialize NavController and ViewModel here
                 val navController = rememberNavController()
                 val viewModel: GamerViewModel = viewModel(factory = viewModelFactory)
-
 
                 NavGraph(navController = navController, viewModel = viewModel)
             }
