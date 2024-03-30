@@ -11,6 +11,7 @@ import com.example.spygamers.models.GamePreference
 import com.example.spygamers.models.RecommendedFriend
 import com.example.spygamers.services.AuthOnlyBody
 import com.example.spygamers.services.ServiceFactory
+import com.example.spygamers.services.authentication.AuthenticationService
 import com.example.spygamers.services.directmessaging.DirectMessagingService
 import com.example.spygamers.services.directmessaging.GetDirectMessagesBody
 import kotlinx.coroutines.Dispatchers
@@ -37,7 +38,7 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
     }
 
     private suspend fun loadAccountInfo() {
-        val service = serviceFactory.createAuthenticationService()
+        val service = serviceFactory.createService(AuthenticationService::class.java)
         val response = service.checkAuthentication(AuthOnlyBody(_sessionToken.value))
 
         if (!response.isSuccessful) {
@@ -79,7 +80,7 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
         }
 
         try {
-            val service = serviceFactory.createAuthenticationService()
+            val service = serviceFactory.createService(AuthenticationService::class.java)
             val response = service.checkAuthentication(AuthOnlyBody(_sessionToken.value))
 
             if (!response.isSuccessful) {
@@ -93,8 +94,8 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
                 return false
             }
 
-            _username.value = responseBody.result.username;
-            _accountID.value = responseBody.result.id;
+            _username.value = responseBody.result.username
+            _accountID.value = responseBody.result.id
             return true
         } catch (e : Exception) {
             Log.e("GamerViewModel", "Failed to check for token validity :: ", e)

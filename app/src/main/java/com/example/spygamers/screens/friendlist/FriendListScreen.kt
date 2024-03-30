@@ -16,7 +16,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -50,7 +49,6 @@ fun FriendListScreen(
     viewModel: GamerViewModel
 ) {
     val scaffoldState = rememberScaffoldState()
-    val scope = rememberCoroutineScope()
 
     Scaffold(
         scaffoldState = scaffoldState,
@@ -86,7 +84,7 @@ private fun MainBody(
 
     LaunchedEffect(Unit) {
         viewModel.viewModelScope.launch {
-            val service = serviceFactory.createFriendshipService()
+            val service = serviceFactory.createService(FriendshipService::class.java)
             val response = service.getFriends(AuthOnlyBody(sessionToken))
             if (response.isSuccessful) {
                 friends = response.body()?.friends ?: emptyList()
