@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
 
 class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel() {
 
-    private val serviceFactory = ServiceFactory();
+    private val serviceFactory = ServiceFactory()
 
     //#region Init Utils
     private val _isInitializing = MutableStateFlow(true)
@@ -30,9 +30,9 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
     private suspend fun loadSessionToken() {
         val foundValue =  gamerRepository.getSessionToken().firstOrNull()
         if (foundValue == null) {
-            removeSessionToken();
+            removeSessionToken()
         } else {
-            _sessionToken.value = foundValue;
+            _sessionToken.value = foundValue
         }
     }
 
@@ -42,19 +42,19 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
 
         if (!response.isSuccessful) {
             Log.w("GamerViewModel", "Unsuccessful Response, removing token...")
-            _sessionToken.value = "";
+            _sessionToken.value = ""
             return
         }
 
         val responseBody = response.body()
         if (responseBody == null || responseBody.status != "SUCCESS") {
             Log.d("GamerViewModel","Invalid Session Token?")
-            _sessionToken.value = "";
+            _sessionToken.value = ""
             return
         }
 
-        _username.value = responseBody.result.username;
-        _accountID.value = responseBody.result.id;
+        _username.value = responseBody.result.username
+        _accountID.value = responseBody.result.id
     }
     //#endregion
 
@@ -75,7 +75,7 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
     suspend fun checkTokenValidity(): Boolean {
         // No session token...
         if (_sessionToken.value.isBlank()) {
-            return false;
+            return false
         }
 
         try {
@@ -89,16 +89,16 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
             // No proper response body, or not success status...
             val responseBody = response.body()
             if (responseBody == null || responseBody.status != "SUCCESS") {
-                removeSessionToken();
-                return false;
+                removeSessionToken()
+                return false
             }
 
             _username.value = responseBody.result.username;
             _accountID.value = responseBody.result.id;
-            return true;
+            return true
         } catch (e : Exception) {
-            Log.e("GamerViewModel", "Failed to check for token validity :: ", e);
-            return false;
+            Log.e("GamerViewModel", "Failed to check for token validity :: ", e)
+            return false
         }
     }
 
@@ -106,9 +106,9 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
      * Use this when logging out...
      */
     fun removeSessionToken() {
-        _sessionToken.value = "";
-        _username.value = "";
-        _accountID.value = -1;
+        _sessionToken.value = ""
+        _username.value = ""
+        _accountID.value = -1
         // TODO: Send logout request to backend server...
         viewModelScope.launch {
             gamerRepository.deleteSessionToken()
@@ -120,9 +120,9 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
      * Updates the Room Database with the new session token...
      */
     fun upsertUserData(sessionToken: String, username: String, accountID: Int){
-        _sessionToken.value = sessionToken;
-        _username.value = username;
-        _accountID.value = accountID;
+        _sessionToken.value = sessionToken
+        _username.value = username
+        _accountID.value = accountID
 
         viewModelScope.launch {
             gamerRepository.insertOrUpdateGamer(Gamer(sessionToken))
@@ -140,7 +140,7 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
     val gamePreferences: List<GamePreference>  = _gamePreferences
 
     fun setViewingUserAccount(accountID: Int) {
-        _targetViewingAccountID.value = accountID;
+        _targetViewingAccountID.value = accountID
     }
 
     fun setGamePreferences(preferences: Collection<GamePreference>) {
@@ -195,7 +195,7 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
     val directMessages: List<DirectMessage>  = _directMessages
 
     fun setDirectMessageTarget(accountID: Int, accountUsername: String) {
-        _targetMessagingAccountID.value = accountID;
+        _targetMessagingAccountID.value = accountID
         _targetMessagingAccountUsername.value = accountUsername
         this.viewModelScope.launch(Dispatchers.IO) {
             fetchTargetDirectMessages()

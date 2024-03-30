@@ -80,10 +80,10 @@ private fun MainBody(
     navController: NavController,
     viewModel: GamerViewModel
 ) {
-    val serviceFactory = ServiceFactory();
+    val serviceFactory = ServiceFactory()
     val context = LocalContext.current
 
-    val currentUsername by viewModel.username.collectAsState();
+    val currentUsername by viewModel.username.collectAsState()
     val messages = viewModel.directMessages
     val lazyListState = rememberLazyListState()
 
@@ -98,7 +98,7 @@ private fun MainBody(
             state = lazyListState
         ) {
             items(messages.size) { index ->
-                val currentDM = messages[index];
+                val currentDM = messages[index]
                 val messageData = MessageData(
                     messageID = currentDM.messageID,
                     authorUsername = currentDM.senderUsername,
@@ -122,7 +122,7 @@ private fun MainBody(
                     it
                 )
             }
-        );
+        )
     }
 
     // NOTE: Remember to change effect logic when implementing dynamic loading...

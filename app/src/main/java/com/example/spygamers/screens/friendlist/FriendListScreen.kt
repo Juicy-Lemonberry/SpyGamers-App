@@ -66,7 +66,7 @@ fun FriendListScreen(
         },
         drawerGesturesEnabled = scaffoldState.drawerState.isOpen
     ) {
-        MainBody(navController, viewModel);
+        MainBody(navController, viewModel)
     }
 }
 
@@ -137,7 +137,7 @@ private fun MainBody(
                 acceptedFriends,
                 onRemoveFriend = {accountID ->
                     viewModel.viewModelScope.launch {
-                        val service = serviceFactory.createService(FriendshipService::class.java);
+                        val service = serviceFactory.createService(FriendshipService::class.java)
 
                         val response = service.removeFriends(
                             RemoveFriendBody(
@@ -157,7 +157,7 @@ private fun MainBody(
                     }
                 },
                 onFriendSelected = {friend ->
-                    viewModel.setDirectMessageTarget(friend.accountID, friend.username);
+                    viewModel.setDirectMessageTarget(friend.accountID, friend.username)
                     navController.navigate(Screen.DirectMessageScreen.route)
                 }
             )
@@ -167,7 +167,7 @@ private fun MainBody(
                     onAcceptRequest = {accountID ->
                         viewModel.viewModelScope.launch {
 
-                            val service = serviceFactory.createService(FriendshipService::class.java);
+                            val service = serviceFactory.createService(FriendshipService::class.java)
 
                             val response = service.addFriends(
                                 AddFriendBody(
@@ -188,7 +188,7 @@ private fun MainBody(
                     },
                 onRejectRequest = {accountID ->
                         viewModel.viewModelScope.launch {
-                            val service = serviceFactory.createService(FriendshipService::class.java);
+                            val service = serviceFactory.createService(FriendshipService::class.java)
                             val response = service.removeFriends(
                                 RemoveFriendBody(
                                     accountID,
@@ -213,7 +213,7 @@ private fun MainBody(
                 outgoingRequests,
                 retractRequest = { accountID ->
                     viewModel.viewModelScope.launch {
-                        val service = serviceFactory.createService(FriendshipService::class.java);
+                        val service = serviceFactory.createService(FriendshipService::class.java)
                         val response = service.removeFriends(
                             RemoveFriendBody(
                                 accountID,
