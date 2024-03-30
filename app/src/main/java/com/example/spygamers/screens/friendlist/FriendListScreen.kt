@@ -1,4 +1,4 @@
-package com.example.spygamers.screens.friendlistscreen
+package com.example.spygamers.screens.friendlist
 
 import android.annotation.SuppressLint
 import android.util.Log
@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
+import com.example.spygamers.Screen
 import com.example.spygamers.components.appbar.AppBar
 import com.example.spygamers.controllers.GamerViewModel
 import com.example.spygamers.models.Friendship
@@ -104,17 +105,17 @@ private fun MainBody(
 
     //#region Helper functions to remove items from friendship lists...
     fun removeIncomingRequest(idToRemove: Int) {
-        incomingRequests = incomingRequests.filter { it.account_id != idToRemove }
+        incomingRequests = incomingRequests.filter { it.accountID != idToRemove }
     }
     fun addFriend(idToAdd: Int){
-        acceptedFriends += incomingRequests.filter {it.account_id == idToAdd}
+        acceptedFriends += incomingRequests.filter {it.accountID == idToAdd}
     }
     fun removeOutgoingRequest(idToRemove: Int) {
-        outgoingRequests = outgoingRequests.filter { it.account_id != idToRemove }
+        outgoingRequests = outgoingRequests.filter { it.accountID != idToRemove }
     }
 
     fun removeAcceptedFriend(idToRemove: Int) {
-        acceptedFriends = acceptedFriends.filter { it.account_id != idToRemove }
+        acceptedFriends = acceptedFriends.filter { it.accountID != idToRemove }
     }
     //#endregion
 
@@ -145,7 +146,7 @@ private fun MainBody(
                             )
                         )
                         if (response.isSuccessful) {
-                            removeIncomingRequest(accountID)
+                            removeAcceptedFriend(accountID)
                         } else {
                             Toast.makeText(context, "Failed to remove friend...", Toast.LENGTH_SHORT).show()
                             Log.e(
@@ -154,6 +155,10 @@ private fun MainBody(
                             )
                         }
                     }
+                },
+                onFriendSelected = {accountID ->
+                    viewModel.setDirectMessageTarget(accountID);
+                    navController.navigate(Screen.DirectMessageScreen.route)
                 }
             )
 
@@ -191,6 +196,7 @@ private fun MainBody(
                                 )
                             )
                             if (response.isSuccessful) {
+                                addFriend(accountID)
                                 removeIncomingRequest(accountID)
                             } else {
                                 Toast.makeText(context, "Failed to reject request...", Toast.LENGTH_SHORT).show()
@@ -215,7 +221,7 @@ private fun MainBody(
                             )
                         )
                         if (response.isSuccessful) {
-                            removeIncomingRequest(accountID)
+                            removeOutgoingRequest(accountID)
                         } else {
                             Toast.makeText(
                                 context,

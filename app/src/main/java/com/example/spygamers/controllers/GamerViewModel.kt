@@ -6,40 +6,27 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.spygamers.db.GamerRepository
 import com.example.spygamers.db.schemas.Gamer
+import com.example.spygamers.models.DirectMessage
 import com.example.spygamers.models.GamePreference
 import com.example.spygamers.models.RecommendedFriend
 import com.example.spygamers.services.AuthOnlyBody
 import com.example.spygamers.services.ServiceFactory
+import com.example.spygamers.services.directmessaging.DirectMessagingService
+import com.example.spygamers.services.directmessaging.GetDirectMessagesBody
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
 class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel() {
-    private val _isInitializing = MutableStateFlow(true)
-    val isInitializing: StateFlow<Boolean> = _isInitializing
-
-    private val _sessionToken = MutableStateFlow<String>("")
-    val sessionToken: StateFlow<String> = _sessionToken
-
-    private val _accountID = MutableStateFlow<Int>(-1)
-    val accountID: StateFlow<Int> = _accountID
-
-    private val _username = MutableStateFlow<String>("")
-    val username: StateFlow<String> = _username
 
     private val serviceFactory = ServiceFactory();
 
-    init {
-        viewModelScope.launch {
-            _isInitializing.value = true
-            loadSessionToken()
-            loadAccountInfo()
-            _isInitializing.value = false
-        }
-    }
-
     //#region Init Utils
+    private val _isInitializing = MutableStateFlow(true)
+    val isInitializing: StateFlow<Boolean> = _isInitializing
+
     private suspend fun loadSessionToken() {
         val foundValue =  gamerRepository.getSessionToken().firstOrNull()
         if (foundValue == null) {
@@ -71,9 +58,15 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
     }
     //#endregion
 
-    fun setViewingUserAccount(accountID: Int) {
-        _targetViewingAccountID.value = accountID;
-    }
+    //#region Currently Login Data
+    private val _sessionToken = MutableStateFlow<String>("")
+    val sessionToken: StateFlow<String> = _sessionToken
+
+    private val _accountID = MutableStateFlow<Int>(-1)
+    val accountID: StateFlow<Int> = _accountID
+
+    private val _username = MutableStateFlow<String>("")
+    val username: StateFlow<String> = _username
 
     /**
      * Call this function to check against the backend server,
@@ -135,14 +128,20 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
             gamerRepository.insertOrUpdateGamer(Gamer(sessionToken))
         }
     }
+    //#endregion
 
     //#region Profile Viewing...
     // TODO: Refactor into 1 new ViewModel?
+
     private val _targetViewingAccountID = MutableStateFlow<Int>(-1)
     val targetViewingAccountID: StateFlow<Int> = _targetViewingAccountID
 
     private val _gamePreferences = mutableStateListOf<GamePreference>()
     val gamePreferences: List<GamePreference>  = _gamePreferences
+
+    fun setViewingUserAccount(accountID: Int) {
+        _targetViewingAccountID.value = accountID;
+    }
 
     fun setGamePreferences(preferences: Collection<GamePreference>) {
         _gamePreferences.clear()
@@ -183,4 +182,65 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
         }
     }
     //#endregion
+
+    //#region Direct Messaging
+
+    private val _targetMessagingAccountID = MutableStateFlow<Int>(-1)
+    val targetMessagingAccountID: StateFlow<Int> = _targetMessagingAccountID
+
+    private val _directMessages = mutableStateListOf<DirectMessage>()
+    val directMessages: List<DirectMessage>  = _directMessages
+
+    fun setDirectMessageTarget(accountID: Int) {
+        _targetMessagingAccountID.value = accountID;
+        this.viewModelScope.launch(Dispatchers.IO) {
+            fetchTargetDirectMessages()
+        }
+    }
+
+    suspend fun fetchTargetDirectMessages(startID: Int? = null) {
+        val service = serviceFactory.createService(DirectMessagingService::class.java)
+
+        val response = service.getDirectMessages(
+            GetDirectMessagesBody(
+                authToken = _sessionToken.value,
+                targetAccountID = _targetMessagingAccountID.value,
+                startID = startID,
+                chunkSize = 75
+            )
+        )
+
+        if (!response.isSuccessful) {
+            Log.e("GamerViewModel.fetchTargetDirectMessages", "Failed to fetch messages :: $response")
+            return
+        }
+
+        // Fetch body response, ensure its not blank...
+        val responseBody = response.body()
+        if (responseBody == null) {
+            Log.e("GamerViewModel.fetchTargetDirectMessages", "Response body is null")
+            return
+        }
+
+        setDirectMessages(responseBody.messages)
+    }
+
+    private fun setDirectMessages(directMessages: Collection<DirectMessage>) {
+        _directMessages.clear()
+        // NOTE: Reversed since in actual GUI, the first element should be at the bottom of the message list...
+        directMessages.reversed().forEach {
+            Log.d("setDirectMessages", "ADD: ${it.messageID}")
+            _directMessages.add(it)
+        }
+    }
+    //#endregion
+
+    init {
+        viewModelScope.launch {
+            _isInitializing.value = true
+            loadSessionToken()
+            loadAccountInfo()
+            _isInitializing.value = false
+        }
+    }
 }

@@ -5,13 +5,14 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.spygamers.controllers.GamerViewModel
-import com.example.spygamers.screens.friendlistscreen.FriendListScreen
-import com.example.spygamers.screens.friendrecommendation.FriendRecommendationScreen
 import com.example.spygamers.screens.HomeScreen
 import com.example.spygamers.screens.InitialScreen
 import com.example.spygamers.screens.LoginScreen
-import com.example.spygamers.screens.register.RegisterScreen
 import com.example.spygamers.screens.SettingScreen
+import com.example.spygamers.screens.directmessage.DirectMessageScreen
+import com.example.spygamers.screens.friendlist.FriendListScreen
+import com.example.spygamers.screens.friendrecommendation.FriendRecommendationScreen
+import com.example.spygamers.screens.register.RegisterScreen
 import com.example.spygamers.screens.viewprofile.ViewProfileScreen
 
 sealed class Screen(val route: String) {
@@ -30,6 +31,8 @@ sealed class Screen(val route: String) {
     object GroupRecommendationScreen : Screen(route = "GroupRecommendation_Screen")
     object ViewProfileScreen : Screen(route = "ViewProfile_Screen")
     object CreateGroupScreen : Screen(route = "CreateGroup_Screen")
+
+    object DirectMessageScreen: Screen(route = "DirectMessage_Screen")
 }
 
 @Composable
@@ -68,6 +71,10 @@ fun NavGraph(
 
         composable(route = Screen.InitialScreen.route) {
             InitialScreen(navController = navController, viewModel = viewModel)
+        }
+
+        composable(route = Screen.DirectMessageScreen.route) {
+            DirectMessageScreen(navController = navController, viewModel = viewModel)
         }
     }
 }
