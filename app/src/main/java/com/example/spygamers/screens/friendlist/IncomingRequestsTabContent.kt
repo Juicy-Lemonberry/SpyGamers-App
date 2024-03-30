@@ -1,4 +1,4 @@
-package com.example.spygamers.screens.friendlistscreen
+package com.example.spygamers.screens.friendlist
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -12,6 +12,7 @@ import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -22,22 +23,30 @@ import androidx.compose.ui.unit.dp
 import com.example.spygamers.components.ProfilePictureIcon
 import com.example.spygamers.models.Friendship
 
+/**
+ * UI Element to show a lazy column of incoming friend requests.
+ * Each incoming request is shown on a row, with buttons to accept/reject.
+ *
+ * If the list is empty, there will just be a text in the center.
+ */
 @Composable
-fun OutgoingRequestsTabContent(
+fun IncomingRequestsTabContent(
     requests: List<Friendship>,
-    retractRequest: (targetAccountID: Int) -> Unit
+    onRejectRequest: (targetAccountID: Int) -> Unit,
+    onAcceptRequest: (targetAccountID: Int) -> Unit
 ) {
     if (requests.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(
                 modifier = Modifier.fillMaxSize(),
-                text = "No outgoing friend requests...",
+                text = "No incoming friend requests...",
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.h4
             )
         }
         return
     }
+
     LazyColumn {
         items(requests.size) { index ->
             val friend = requests[index]
@@ -45,10 +54,10 @@ fun OutgoingRequestsTabContent(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // TODO: Replace with actual pfp
+                // TODO: Actual profile picture
                 ProfilePictureIcon()
 
-                // Friend name
+                // Name of friend
                 Text(
                     text = friend.username,
                     modifier = Modifier
@@ -57,10 +66,27 @@ fun OutgoingRequestsTabContent(
                     style = MaterialTheme.typography.body1,
                 )
 
-                // Reject icon
+                // Accept icon
                 IconButton(
                     onClick = {
-                        retractRequest(friend.account_id)
+                        onAcceptRequest(friend.accountID)
+                    },
+                    modifier = Modifier
+                        .padding(4.dp)
+                        .background(Color.Green)
+                ) {
+                    Icon(
+                        Icons.Default.Check,
+                        contentDescription = "Accept",
+                        tint = Color.White
+                    )
+                }
+
+                // Reject icon
+                IconButton(
+                    onClick =
+                    {
+                        onRejectRequest(friend.accountID)
                     },
                     modifier = Modifier
                         .padding(4.dp)

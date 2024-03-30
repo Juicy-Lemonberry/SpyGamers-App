@@ -1,4 +1,4 @@
-package com.example.spygamers.screens.friendlistscreen
+package com.example.spygamers.screens.friendlist
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -23,44 +23,44 @@ import com.example.spygamers.components.ProfilePictureIcon
 import com.example.spygamers.models.Friendship
 
 @Composable
-fun FriendsTabContent(
-    acceptedFriends: List<Friendship>,
-    onRemoveFriend: (targetFriendID: Int) -> Unit
+fun OutgoingRequestsTabContent(
+    requests: List<Friendship>,
+    retractRequest: (targetAccountID: Int) -> Unit
 ) {
-    if (acceptedFriends.isEmpty()) {
+    if (requests.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(
                 modifier = Modifier.fillMaxSize(),
-                text = "No friends...",
+                text = "No outgoing friend requests...",
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.h4
             )
         }
         return
     }
-
-    // Implement the UI for displaying friends
     LazyColumn {
-        items(acceptedFriends.size) {index ->
-            val friend = acceptedFriends[index]
+        items(requests.size) { index ->
+            val friend = requests[index]
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // TODO: Replace with actual profile picture...
+                // TODO: Replace with actual pfp
                 ProfilePictureIcon()
+
                 // Friend name
                 Text(
-                    text = "Friend: ${friend.username}",
+                    text = friend.username,
                     modifier = Modifier
                         .weight(1f)
                         .padding(start = 8.dp, end = 16.dp),
                     style = MaterialTheme.typography.body1,
                 )
+
                 // Reject icon
                 IconButton(
                     onClick = {
-                        onRemoveFriend(friend.account_id)
+                        retractRequest(friend.accountID)
                     },
                     modifier = Modifier
                         .padding(4.dp)

@@ -1,4 +1,4 @@
-package com.example.spygamers.screens.friendlistscreen
+package com.example.spygamers.screens.friendlist
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -12,7 +12,6 @@ import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -23,23 +22,16 @@ import androidx.compose.ui.unit.dp
 import com.example.spygamers.components.ProfilePictureIcon
 import com.example.spygamers.models.Friendship
 
-/**
- * UI Element to show a lazy column of incoming friend requests.
- * Each incoming request is shown on a row, with buttons to accept/reject.
- *
- * If the list is empty, there will just be a text in the center.
- */
 @Composable
-fun IncomingRequestsTabContent(
-    requests: List<Friendship>,
-    onRejectRequest: (targetAccountID: Int) -> Unit,
-    onAcceptRequest: (targetAccountID: Int) -> Unit
+fun FriendsTabContent(
+    acceptedFriends: List<Friendship>,
+    onRemoveFriend: (targetFriendID: Int) -> Unit
 ) {
-    if (requests.isEmpty()) {
+    if (acceptedFriends.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(
                 modifier = Modifier.fillMaxSize(),
-                text = "No incoming friend requests...",
+                text = "No friends...",
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.h4
             )
@@ -47,46 +39,28 @@ fun IncomingRequestsTabContent(
         return
     }
 
+    // Implement the UI for displaying friends
     LazyColumn {
-        items(requests.size) { index ->
-            val friend = requests[index]
+        items(acceptedFriends.size) {index ->
+            val friend = acceptedFriends[index]
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // TODO: Actual profile picture
+                // TODO: Replace with actual profile picture...
                 ProfilePictureIcon()
-
-                // Name of friend
+                // Friend name
                 Text(
-                    text = friend.username,
+                    text = "Friend: ${friend.username}",
                     modifier = Modifier
                         .weight(1f)
                         .padding(start = 8.dp, end = 16.dp),
                     style = MaterialTheme.typography.body1,
                 )
-
-                // Accept icon
-                IconButton(
-                    onClick = {
-                        onAcceptRequest(friend.account_id)
-                    },
-                    modifier = Modifier
-                        .padding(4.dp)
-                        .background(Color.Green)
-                ) {
-                    Icon(
-                        Icons.Default.Check,
-                        contentDescription = "Accept",
-                        tint = Color.White
-                    )
-                }
-
                 // Reject icon
                 IconButton(
-                    onClick =
-                    {
-                        onRejectRequest(friend.account_id)
+                    onClick = {
+                        onRemoveFriend(friend.accountID)
                     },
                     modifier = Modifier
                         .padding(4.dp)

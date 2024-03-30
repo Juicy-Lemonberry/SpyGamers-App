@@ -1,4 +1,4 @@
-package com.example.spygamers.screens.friendlistscreen
+package com.example.spygamers.screens.friendlist
 
 import android.annotation.SuppressLint
 import android.util.Log
@@ -104,17 +104,17 @@ private fun MainBody(
 
     //#region Helper functions to remove items from friendship lists...
     fun removeIncomingRequest(idToRemove: Int) {
-        incomingRequests = incomingRequests.filter { it.account_id != idToRemove }
+        incomingRequests = incomingRequests.filter { it.accountID != idToRemove }
     }
     fun addFriend(idToAdd: Int){
-        acceptedFriends += incomingRequests.filter {it.account_id == idToAdd}
+        acceptedFriends += incomingRequests.filter {it.accountID == idToAdd}
     }
     fun removeOutgoingRequest(idToRemove: Int) {
-        outgoingRequests = outgoingRequests.filter { it.account_id != idToRemove }
+        outgoingRequests = outgoingRequests.filter { it.accountID != idToRemove }
     }
 
     fun removeAcceptedFriend(idToRemove: Int) {
-        acceptedFriends = acceptedFriends.filter { it.account_id != idToRemove }
+        acceptedFriends = acceptedFriends.filter { it.accountID != idToRemove }
     }
     //#endregion
 
