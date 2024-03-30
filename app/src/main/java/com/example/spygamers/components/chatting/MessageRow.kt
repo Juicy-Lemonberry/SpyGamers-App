@@ -48,7 +48,7 @@ fun MessageRow(message: MessageData) {
                 // Username...
                 Text(
                     text = message.authorUsername,
-                    style = MaterialTheme.typography.body1
+                    style = MaterialTheme.typography.h6
                 )
                 // Content of text...
                 Text(

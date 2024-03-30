@@ -5,8 +5,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.Icon
@@ -61,11 +63,14 @@ fun FriendsTabContent(
                     .weight(4f)
                 ) {
                     Text(
-                        text = "Friend: ${friend.username}",
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(start = 8.dp, end = 16.dp),
-                        style = MaterialTheme.typography.body1,
+                        text = friend.username,
+                        style = MaterialTheme.typography.body1
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "Tap here to start a conversation!",
+                        style = MaterialTheme.typography.caption,
+                        color = MaterialTheme.colors.secondary
                     )
                 }
 
