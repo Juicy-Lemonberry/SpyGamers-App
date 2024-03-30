@@ -1,6 +1,8 @@
 package com.example.spygamers.services.group
 
 import com.example.spygamers.API_BASE_URL
+import com.example.spygamers.services.StatusOnlyResponse
+import com.example.spygamers.services.group.body.AddMemberBody
 import com.example.spygamers.services.group.body.CreateGroupBody
 import com.example.spygamers.services.group.body.GetAccountGroupsBody
 import com.example.spygamers.services.group.body.GetGroupMessagesBody
@@ -21,7 +23,7 @@ interface GroupService {
         @Body user: GetAccountGroupsBody
     ): Response<GetAccountGroupsResponse>
 
-    @POST("$API_BASE_URL/group/get-account-groups")
+    @POST("$API_BASE_URL/group/get-messages")
     suspend fun getGroupMessages(
         @Body body: GetGroupMessagesBody
     ): Response<GetGroupMessagesResponse>
@@ -39,4 +41,9 @@ interface GroupService {
         @Part("content") content: String,
         @Part files: List<MultipartBody.Part>? = null,
     ): Response<SendGroupMessageResponse>
+
+    @POST("$API_BASE_URL/group/add-member")
+    suspend fun addMember(
+        @Body body: AddMemberBody
+    ): Response<StatusOnlyResponse>
 }

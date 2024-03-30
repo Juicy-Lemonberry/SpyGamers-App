@@ -9,7 +9,7 @@ data class CreatedGroupMessage (
     val messageID: Int,
     @SerializedName("attachment_ids")
     val attachmentsID: List<Int>,
-    @SerializedName("group_id")
+    @SerializedName("timestamp")
     val timestamp: Date
 )
 

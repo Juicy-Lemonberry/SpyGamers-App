@@ -85,7 +85,7 @@ fun NavGraph(
             CreateGroupScreen(navController = navController, viewModel = viewModel)
         }
 
-        composable(route = Screen.DirectMessageScreen.route) {
+        composable(route = Screen.GroupMessageScreen.route) {
             GroupMessageScreen(navController = navController, viewModel = viewModel)
         }
     }

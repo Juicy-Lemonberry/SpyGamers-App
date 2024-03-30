@@ -47,9 +47,9 @@ fun GroupMessageScreen(
     val scope = rememberCoroutineScope()
 
     val accountID by viewModel.accountID.collectAsState()
-
     val groupName by viewModel.targetGroupName.collectAsState()
 
+    // TODO: On appbar title click, show list of group members...
     Scaffold(
         scaffoldState = scaffoldState,
         topBar = {
@@ -59,7 +59,7 @@ fun GroupMessageScreen(
                         scaffoldState.drawerState.open()
                     }
                 },
-                appBarTitle = "Group: $groupName"
+                appBarTitle = groupName
             )
         },
         drawerGesturesEnabled = scaffoldState.drawerState.isOpen,
@@ -90,6 +90,8 @@ private fun MainBody(
     val messages = viewModel.groupMessages
     val lazyListState = rememberLazyListState()
 
+    Log.d("GroupMessageScreen", "Message Size: ${messages.size}")
+
     // TODO: Show something like 'this is the start of ur conversation' if there are no messages...
     // TODO: Implement dynamic loading (load more messages once user hit the top of the messages list...)
     Column {
@@ -102,6 +104,7 @@ private fun MainBody(
         ) {
             items(messages.size) { index ->
                 val groupMessage = messages[index]
+                Log.d("GroupMessageScreen", "INDEX :: $index :: $groupMessage")
                 val messageData = MessageData(
                     messageID = groupMessage.messageID,
                     authorUsername = groupMessage.senderUsername,

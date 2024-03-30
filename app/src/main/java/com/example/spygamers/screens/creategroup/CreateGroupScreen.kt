@@ -30,6 +30,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -46,9 +47,12 @@ import com.example.spygamers.services.AuthOnlyBody
 import com.example.spygamers.services.ServiceFactory
 import com.example.spygamers.services.friendship.FriendshipService
 import com.example.spygamers.services.group.GroupService
+import com.example.spygamers.services.group.body.AddMemberBody
 import com.example.spygamers.services.group.body.CreateGroupBody
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
@@ -81,6 +85,7 @@ private fun MainBody(
     navController: NavController,
     viewModel: GamerViewModel
 ) {
+    val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
     // Example setup, replace with your actual implementation
     val serviceFactory = ServiceFactory()
@@ -180,8 +185,7 @@ private fun MainBody(
                     Toast.makeText(context, "No group name set!", Toast.LENGTH_SHORT).show()
                     return@FloatingActionButton
                 }
-
-                viewModel.viewModelScope.launch(Dispatchers.IO) {
+                coroutineScope.launch(Dispatchers.IO) {
                     try {
                         val service = serviceFactory.createService(GroupService::class.java)
                         val response = service.createGroup(
@@ -206,12 +210,26 @@ private fun MainBody(
                         }
 
                         // If group created successfully, populate in ViewModel,
-                        // then redirect to the group chat itself...
                         val groupID = responseBody.groupID
                         viewModel.setTargetGroup(groupID, groupName, groupDescription, isPublic)
 
-                        navController.popBackStack()
-                        navController.navigate(Screen.GroupMessageScreen.route)
+                        // Add through every single selected friend into the group...
+                        selectedFriends.forEach {accountID ->
+                            service.addMember(
+                                AddMemberBody(
+                                    authToken = sessionToken,
+                                    groupID = groupID,
+                                    targetUserID = accountID
+                                )
+                            )
+                        }
+
+                        // Navigate to the group messaging...
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(context, "Successfully created group!\r\nNavigating to group chat...", Toast.LENGTH_LONG).show()
+                            delay(1500)
+                            navController.navigate(Screen.GroupMessageScreen.route)
+                        }
                     } catch (e: Exception) {
                         Log.e("DirectMessageScreen.sendMessageToUser", "Error sending message :: ", e)
                     }
