@@ -143,7 +143,7 @@ private fun sendMessageToUser(
     viewModel.viewModelScope.launch(Dispatchers.IO) {
         try {
             val sessionToken = viewModel.sessionToken.value
-            val targetAccountID = viewModel.accountID.value
+            val targetAccountID = viewModel.targetMessagingAccountID.value
 
             val service = serviceFactory.createService(DirectMessagingService::class.java)
             val response = service.sendDirectMessage(

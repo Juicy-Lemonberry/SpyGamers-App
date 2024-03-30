@@ -23,15 +23,6 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
 
     private val serviceFactory = ServiceFactory();
 
-    init {
-        viewModelScope.launch {
-            _isInitializing.value = true
-            loadSessionToken()
-            loadAccountInfo()
-            _isInitializing.value = false
-        }
-    }
-
     //#region Init Utils
     private val _isInitializing = MutableStateFlow(true)
     val isInitializing: StateFlow<Boolean> = _isInitializing
@@ -214,7 +205,8 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
             GetDirectMessagesBody(
                 authToken = _sessionToken.value,
                 targetAccountID = _targetMessagingAccountID.value,
-                startID = startID
+                startID = startID,
+                chunkSize = 75
             )
         )
 
@@ -235,10 +227,20 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
 
     private fun setDirectMessages(directMessages: Collection<DirectMessage>) {
         _directMessages.clear()
-        directMessages.forEach {
+        // NOTE: Reversed since in actual GUI, the first element should be at the bottom of the message list...
+        directMessages.reversed().forEach {
             Log.d("setDirectMessages", "ADD: ${it.messageID}")
             _directMessages.add(it)
         }
     }
     //#endregion
+
+    init {
+        viewModelScope.launch {
+            _isInitializing.value = true
+            loadSessionToken()
+            loadAccountInfo()
+            _isInitializing.value = false
+        }
+    }
 }

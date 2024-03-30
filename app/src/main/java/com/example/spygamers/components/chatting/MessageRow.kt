@@ -11,6 +11,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -53,13 +54,14 @@ fun MessageRow(message: MessageData) {
                 Text(
                     // Display message only if its not deleted...
                     text = if (!message.isDeletedMessage) message.content else "This message was deleted...",
-                    style = MaterialTheme.typography.subtitle1
+                    style = MaterialTheme.typography.subtitle2
                 )
                 // Timestamp of text...
                 Text(
                     text = dateFormat.format(message.timestamp),
                     style = MaterialTheme.typography.caption,
-                    modifier = Modifier.align(Alignment.End)
+                    modifier = Modifier.align(Alignment.End),
+                    fontStyle = FontStyle.Italic
                 )
             }
         }

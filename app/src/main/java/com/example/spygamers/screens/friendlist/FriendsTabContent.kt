@@ -1,7 +1,9 @@
 package com.example.spygamers.screens.friendlist
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,7 +27,8 @@ import com.example.spygamers.models.Friendship
 @Composable
 fun FriendsTabContent(
     acceptedFriends: List<Friendship>,
-    onRemoveFriend: (targetFriendID: Int) -> Unit
+    onRemoveFriend: (targetFriendID: Int) -> Unit,
+    onFriendSelected: (selectedFriendID: Int) -> Unit
 ) {
     if (acceptedFriends.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -49,14 +52,23 @@ fun FriendsTabContent(
             ) {
                 // TODO: Replace with actual profile picture...
                 ProfilePictureIcon()
-                // Friend name
-                Text(
-                    text = "Friend: ${friend.username}",
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(start = 8.dp, end = 16.dp),
-                    style = MaterialTheme.typography.body1,
-                )
+
+                // Name of friend, with onclick callback to selected...
+                Column(modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable{onFriendSelected(friend.accountID)}
+                    .padding(8.dp)
+                    .weight(4f)
+                ) {
+                    Text(
+                        text = "Friend: ${friend.username}",
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = 8.dp, end = 16.dp),
+                        style = MaterialTheme.typography.body1,
+                    )
+                }
+
                 // Reject icon
                 IconButton(
                     onClick = {

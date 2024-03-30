@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
+import com.example.spygamers.Screen
 import com.example.spygamers.components.appbar.AppBar
 import com.example.spygamers.controllers.GamerViewModel
 import com.example.spygamers.models.Friendship
@@ -154,6 +155,10 @@ private fun MainBody(
                             )
                         }
                     }
+                },
+                onFriendSelected = {accountID ->
+                    viewModel.setDirectMessageTarget(accountID);
+                    navController.navigate(Screen.DirectMessageScreen.route)
                 }
             )
 
