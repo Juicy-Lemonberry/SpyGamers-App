@@ -1,20 +1,28 @@
 package com.example.spygamers.screens.groupmessage
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Scaffold
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -27,12 +35,16 @@ import com.example.spygamers.components.appbar.DrawerHeader
 import com.example.spygamers.components.chatting.ChatInputRow
 import com.example.spygamers.components.chatting.MessageData
 import com.example.spygamers.components.chatting.MessageRow
+import com.example.spygamers.components.dialogs.ConfirmDialog
 import com.example.spygamers.controllers.GamerViewModel
 import com.example.spygamers.models.messaging.GroupMessage
 import com.example.spygamers.services.ServiceFactory
 import com.example.spygamers.services.group.GroupService
 import com.example.spygamers.utils.generateDefaultDrawerItems
 import com.example.spygamers.utils.handleDrawerItemClicked
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -78,11 +90,18 @@ fun GroupMessageScreen(
     }
 }
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 private fun MainBody(
     navController: NavController,
     viewModel: GamerViewModel
 ) {
+    val permissionsState = rememberPermissionState(
+        Manifest.permission.READ_EXTERNAL_STORAGE
+    )
+    val permissionGrantState by viewModel.grantedMediaFileAccess.collectAsState()
+
+    val coroutineScope = rememberCoroutineScope()
     val serviceFactory = ServiceFactory()
     val context = LocalContext.current
 
@@ -91,6 +110,43 @@ private fun MainBody(
     val lazyListState = rememberLazyListState()
 
     Log.d("GroupMessageScreen", "Message Size: ${messages.size}")
+
+    var requestedForPermissions by rememberSaveable {
+        mutableStateOf(false)
+    }
+
+    // Request for permission to send attachments...
+    if (!requestedForPermissions && !permissionGrantState) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+
+        if (permissionsState.status.isGranted) {
+            Log.d("GroupMessageScreen", "All permissions already granted, skipping...")
+            // All permissions already granted, no need to request...
+            requestedForPermissions = true
+            return
+        }
+
+        Log.d("GroupMessageScreen", "No permissions granted, requesting...")
+        // Popup explain why we need permissions, before requesting...
+        ConfirmDialog(
+            textContent = "We require permissions to send attachments!",
+            onDismiss = {
+                Log.d("GroupMessageScreen", "Rejected to give permissions...")
+                Toast.makeText(context, "Sending of attachments may not work...", Toast.LENGTH_LONG).show()
+                requestedForPermissions = true
+            },
+            onConfirm = {
+                coroutineScope.launch {
+                    permissionsState.launchPermissionRequest()
+                    requestedForPermissions = true
+                    viewModel.updateMediaFileGrants(true)
+                }
+            }
+        )
+        return;
+    }
 
     // TODO: Show something like 'this is the start of ur conversation' if there are no messages...
     // TODO: Implement dynamic loading (load more messages once user hit the top of the messages list...)
