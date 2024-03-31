@@ -1,12 +1,20 @@
 package com.example.spygamers.services.recommendations
 
+import com.google.gson.annotations.SerializedName
+
 data class FriendsRecommendationBody(
-    val auth_token: String,
-    val sort_by: String = "DEFAULT",
-    val chunk_size: Int = 10
+    @SerializedName("auth_token")
+    val authToken: String,
+    @SerializedName("sort_by")
+    val sortBy: String = "DEFAULT",
+    @SerializedName("chunk_size")
+    val chunkSize: Int = 10
 )
 
 data class FriendRequestBody(
-    val auth_token: String,
-    val target_account_id: Int,
+    @SerializedName("auth_token")
+    val authToken: String,
+
+    @SerializedName("target_account_id")
+    val targetAccountID: Int,
 )

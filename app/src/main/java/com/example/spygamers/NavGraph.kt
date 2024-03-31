@@ -15,6 +15,7 @@ import com.example.spygamers.screens.friendlist.FriendListScreen
 import com.example.spygamers.screens.friendrecommendation.FriendRecommendationScreen
 import com.example.spygamers.screens.grouplist.GroupListScreen
 import com.example.spygamers.screens.groupmessage.GroupMessageScreen
+import com.example.spygamers.screens.recommendgroups.RecommendGroupsScreen
 import com.example.spygamers.screens.register.RegisterScreen
 import com.example.spygamers.screens.viewprofile.ViewProfileScreen
 
@@ -92,6 +93,10 @@ fun NavGraph(
         
         composable(route = Screen.GroupListScreen.route) {
             GroupListScreen(navController = navController, viewModel = viewModel)
+        }
+
+        composable(route = Screen.GroupRecommendationScreen.route) {
+            RecommendGroupsScreen(navController = navController, viewModel = viewModel)
         }
     }
 }

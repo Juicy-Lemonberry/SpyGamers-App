@@ -6,6 +6,7 @@ import com.example.spygamers.services.group.body.AddMemberBody
 import com.example.spygamers.services.group.body.CreateGroupBody
 import com.example.spygamers.services.group.body.GetAccountGroupsBody
 import com.example.spygamers.services.group.body.GetGroupMessagesBody
+import com.example.spygamers.services.group.body.JoinGroupBody
 import com.example.spygamers.services.group.response.CreateGroupResponse
 import com.example.spygamers.services.group.response.GetAccountGroupsResponse
 import com.example.spygamers.services.group.response.GetGroupMessagesResponse
@@ -45,5 +46,10 @@ interface GroupService {
     @POST("$API_BASE_URL/group/add-member")
     suspend fun addMember(
         @Body body: AddMemberBody
+    ): Response<StatusOnlyResponse>
+
+    @POST("$API_BASE_URL/group/join")
+    suspend fun joinGroup(
+        @Body body: JoinGroupBody
     ): Response<StatusOnlyResponse>
 }
