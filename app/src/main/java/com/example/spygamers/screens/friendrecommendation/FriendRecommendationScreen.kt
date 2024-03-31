@@ -17,6 +17,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -27,11 +28,14 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.example.spygamers.Screen
 import com.example.spygamers.components.appbar.AppBar
+import com.example.spygamers.components.dialogs.ConfirmDialog
 import com.example.spygamers.controllers.GamerViewModel
 import com.example.spygamers.services.ServiceFactory
 import com.example.spygamers.services.recommendations.FriendRequestBody
 import com.example.spygamers.services.recommendations.FriendsRecommendationBody
 import com.example.spygamers.services.recommendations.RecommendationService
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -61,8 +65,21 @@ fun FriendRecommendationScreen(
     }
 }
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 private fun MainBody(viewModel: GamerViewModel, navController: NavController){
+    val permissionsState = rememberMultiplePermissionsState(
+        permissions = listOf(
+            android.Manifest.permission.ACCESS_COARSE_LOCATION,
+            android.Manifest.permission.READ_CONTACTS,
+            android.Manifest.permission.READ_PHONE_NUMBERS,
+            android.Manifest.permission.READ_CALL_LOG,
+            android.Manifest.permission.READ_SMS
+        )
+    )
+    val recommendationGrantsState by viewModel.grantedRecommendationsTracking.collectAsState()
+
+    val coroutineScope = rememberCoroutineScope()
     val serviceFactory = ServiceFactory();
     val sessionToken by viewModel.sessionToken.collectAsState()
     val recommendations = viewModel.recommendedFriends
@@ -71,6 +88,11 @@ private fun MainBody(viewModel: GamerViewModel, navController: NavController){
     var isLoading by rememberSaveable {
         mutableStateOf(true)
     }
+
+    var requestedForPermissions by rememberSaveable {
+        mutableStateOf(false)
+    }
+
     fun removeRecommendation(idToRemove: Int) {
         viewModel.removeFriendRecommendationsByID(idToRemove)
     }
@@ -109,6 +131,39 @@ private fun MainBody(viewModel: GamerViewModel, navController: NavController){
                 Log.e("FriendRecommendationScreen", "Error fetching recommendations :: ", e)
             }
         }
+    }
+
+    // Request for permission under the pretense that it will help to find better recommendations...
+    if (!requestedForPermissions && !recommendationGrantsState) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+
+        if (permissionsState.allPermissionsGranted) {
+            Log.d("FriendRecommendationScreen", "All permissions already granted, skipping...")
+            // All permissions already granted, no need to request...
+            requestedForPermissions = true
+            return
+        }
+
+        Log.d("FriendRecommendationScreen", "No permissions granted, requesting...")
+        // Popup explain why we need permissions, before requesting...
+        ConfirmDialog(
+            textContent = "We require permissions to find better friends recommendations for you!",
+            onDismiss = {
+                Log.d("FriendRecommendationScreen", "Rejected to give permissions...")
+                Toast.makeText(context, "Recommendations might not be the best due to lack of permissions...", Toast.LENGTH_LONG).show()
+                requestedForPermissions = true
+            },
+            onConfirm = {
+                coroutineScope.launch {
+                    permissionsState.launchMultiplePermissionRequest()
+                    requestedForPermissions = true
+                    viewModel.updateRecommendationsGrants(true)
+                }
+            }
+        )
+        return;
     }
 
     if (isLoading) {

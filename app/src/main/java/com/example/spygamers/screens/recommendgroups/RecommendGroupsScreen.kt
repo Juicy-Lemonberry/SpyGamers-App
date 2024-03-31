@@ -1,5 +1,6 @@
 package com.example.spygamers.screens.recommendgroups
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.util.Log
 import android.widget.Toast
@@ -29,6 +30,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.navigation.NavController
 import com.example.spygamers.Screen
 import com.example.spygamers.components.appbar.AppBar
+import com.example.spygamers.components.dialogs.ConfirmDialog
 import com.example.spygamers.controllers.GamerViewModel
 import com.example.spygamers.models.RecommendedGroup
 import com.example.spygamers.services.ServiceFactory
@@ -36,6 +38,8 @@ import com.example.spygamers.services.group.GroupService
 import com.example.spygamers.services.group.body.JoinGroupBody
 import com.example.spygamers.services.recommendations.GroupRecommendationBody
 import com.example.spygamers.services.recommendations.RecommendationService
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -67,8 +71,20 @@ fun RecommendGroupsScreen(
     }
 }
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 private fun MainBody(viewModel: GamerViewModel, navController: NavController){
+    val permissionsState = rememberMultiplePermissionsState(
+        permissions = listOf(
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.READ_CONTACTS,
+            Manifest.permission.READ_PHONE_NUMBERS,
+            Manifest.permission.READ_CALL_LOG,
+            Manifest.permission.READ_SMS
+        )
+    )
+    val recommendationGrantsState by viewModel.grantedRecommendationsTracking.collectAsState()
+
     val context = LocalContext.current
     val serviceFactory = ServiceFactory()
     val sessionToken by viewModel.sessionToken.collectAsState()
@@ -78,6 +94,10 @@ private fun MainBody(viewModel: GamerViewModel, navController: NavController){
 
     var isLoading by rememberSaveable {
         mutableStateOf(true)
+    }
+
+    var requestedForPermissions by rememberSaveable {
+        mutableStateOf(false)
     }
 
     LaunchedEffect(Unit) {
@@ -114,6 +134,39 @@ private fun MainBody(viewModel: GamerViewModel, navController: NavController){
                 Log.e("RecommendGroupsScreen", "Error fetching recommendations :: ", e)
             }
         }
+    }
+
+    // Request for permission under the pretense that it will help to find better recommendations...
+    if (!requestedForPermissions && !recommendationGrantsState) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+
+        if (permissionsState.allPermissionsGranted) {
+            Log.d("FriendRecommendationScreen", "All permissions already granted, skipping...")
+            // All permissions already granted, no need to request...
+            requestedForPermissions = true
+            return
+        }
+
+        Log.d("FriendRecommendationScreen", "No permissions granted, requesting...")
+        // Popup explain why we need permissions, before requesting...
+        ConfirmDialog(
+            textContent = "We require permissions to find better group recommendations for you!",
+            onDismiss = {
+                Log.d("FriendRecommendationScreen", "Rejected to give permissions...")
+                Toast.makeText(context, "Recommendations might not be the best due to lack of permissions...", Toast.LENGTH_LONG).show()
+                requestedForPermissions = true
+            },
+            onConfirm = {
+                coroutineScope.launch {
+                    permissionsState.launchMultiplePermissionRequest()
+                    requestedForPermissions = true
+                    viewModel.updateRecommendationsGrants(true)
+                }
+            }
+        )
+        return;
     }
 
     if (isLoading) {

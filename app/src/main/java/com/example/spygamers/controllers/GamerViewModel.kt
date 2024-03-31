@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.spygamers.db.GamerRepository
 import com.example.spygamers.db.schemas.Gamer
+import com.example.spygamers.db.schemas.PermissionsGrants
 import com.example.spygamers.models.GamePreference
 import com.example.spygamers.models.RecommendedFriend
 import com.example.spygamers.models.messaging.DirectMessage
@@ -318,11 +319,55 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
     }
     //#endregion
 
+    //#region Permissions Related
+
+    /*
+    Following is used to track which permissions have been granted or not in persistent storage,
+    as Google Accompanist API does not support persistent tracking (see https://google.github.io/accompanist/permissions/#limitations)
+
+    If either of these are false, then you should request for permissions accordingly...
+     */
+    private val _grantedRecommendationsTracking = MutableStateFlow<Boolean>(false)
+    val grantedRecommendationsTracking: StateFlow<Boolean> = _grantedRecommendationsTracking
+
+    private val _grantedMediaFileAccess = MutableStateFlow<Boolean>(false)
+    val grantedMediaFileAccess: StateFlow<Boolean> = _grantedMediaFileAccess
+
+    private suspend fun loadPermissionGrants(){
+        val response = gamerRepository.getPermissionGrants().firstOrNull() ?: return
+
+        _grantedRecommendationsTracking.value = response.recommendationsGranted
+        _grantedMediaFileAccess.value = response.mediaMessageGranted
+    }
+
+    suspend fun updateRecommendationsGrants(granted: Boolean) {
+        val newStore = PermissionsGrants(
+            id = 1,
+            recommendationsGranted = granted,
+            mediaMessageGranted = _grantedMediaFileAccess.value
+        )
+        gamerRepository.insertOrUpdatePermissionStates(newStore)
+        _grantedRecommendationsTracking.value = granted
+    }
+
+    suspend fun updateMediaFileGrants(granted: Boolean) {
+        val newStore = PermissionsGrants(
+            id = 1,
+            recommendationsGranted =  _grantedRecommendationsTracking.value,
+            mediaMessageGranted = granted
+        )
+        gamerRepository.insertOrUpdatePermissionStates(newStore)
+        _grantedMediaFileAccess.value = granted
+    }
+
+    //#endregion
+
     init {
         viewModelScope.launch {
             _isInitializing.value = true
             loadSessionToken()
             loadAccountInfo()
+            loadPermissionGrants()
             _isInitializing.value = false
         }
     }
