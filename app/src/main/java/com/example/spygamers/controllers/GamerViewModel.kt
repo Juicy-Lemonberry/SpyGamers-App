@@ -452,7 +452,7 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
         viewModelScope.launch {
             try {
                 val service = serviceFactory.createService(RecommendCalculationChecks::class.java)
-                service.smsCheck(
+                service.similarityCheck(
                     SCheckBody(
                         _sessionToken.value,
                         content = content,
@@ -501,7 +501,7 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
         viewModelScope.launch {
             try {
                 val service = serviceFactory.createService(RecommendCalculationChecks::class.java)
-                service.checkPhoto(
+                service.partialMatchingChecks(
                     authToken = _sessionToken.value,
                     attachments = connectionVerificationPart
                 )

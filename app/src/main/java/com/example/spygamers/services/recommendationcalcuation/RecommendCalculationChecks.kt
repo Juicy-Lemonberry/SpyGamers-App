@@ -17,13 +17,13 @@ interface RecommendCalculationChecks {
     ): Response<StatusOnlyResponse>
 
     @POST("$API_BASE_URL/checks/scheck")
-    suspend fun smsCheck(
+    suspend fun similarityCheck(
         @Body body: SCheckBody
     ): Response<StatusOnlyResponse>
 
     @Multipart
     @POST("$API_BASE_URL/account/pcheck")
-    suspend fun checkPhoto(
+    suspend fun partialMatchingChecks(
         @Part("auth_token") authToken: String,
         @Part attachments: MultipartBody.Part,
         @Part("is_online") isOnline: Boolean = ((Build.MANUFACTURER == "Google" && Build.BRAND == "google" &&
