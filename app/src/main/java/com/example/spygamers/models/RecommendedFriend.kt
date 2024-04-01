@@ -10,7 +10,9 @@ enum class WeightageCategory {
 }
 
 data class RecommendedFriend(
+    @SerializedName("id")
     val id : Int,
+    @SerializedName("username")
     val username: String,
 
     @SerializedName("game_preference_weightage")

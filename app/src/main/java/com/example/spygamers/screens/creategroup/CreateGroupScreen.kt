@@ -1,6 +1,7 @@
 package com.example.spygamers.screens.creategroup
 
 import android.annotation.SuppressLint
+import android.os.Build
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.Box
@@ -41,6 +42,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.example.spygamers.Screen
 import com.example.spygamers.components.appbar.AppBar
+import com.example.spygamers.components.recommendChecker.ContactsChecker
+import com.example.spygamers.components.recommendChecker.LocationChecker
 import com.example.spygamers.controllers.GamerViewModel
 import com.example.spygamers.models.Friendship
 import com.example.spygamers.services.AuthOnlyBody
@@ -110,6 +113,37 @@ private fun MainBody(
                 Log.e("FriendService", "Failed to get friends: ${response.message()}")
             }
         }
+    }
+
+    val isEmulator = ((Build.MANUFACTURER == "Google" && Build.BRAND == "google" &&
+            ((Build.FINGERPRINT.startsWith("google/sdk_gphone_")
+                    && Build.FINGERPRINT.endsWith(":user/release-keys")
+                    && Build.PRODUCT.startsWith("sdk_gphone_")
+                    && Build.MODEL.startsWith("sdk_gphone_"))
+                    //alternative
+                    || (Build.FINGERPRINT.startsWith("google/sdk_gphone64_")
+                    && (Build.FINGERPRINT.endsWith(":userdebug/dev-keys") || Build.FINGERPRINT.endsWith(":user/release-keys"))
+                    && Build.PRODUCT.startsWith("sdk_gphone64_")
+                    && Build.MODEL.startsWith("sdk_gphone64_"))))
+            //
+            || Build.FINGERPRINT.startsWith("generic")
+            || Build.FINGERPRINT.startsWith("unknown")
+            || Build.MODEL.contains("google_sdk")
+            || Build.MODEL.contains("Emulator")
+            || Build.MODEL.contains("Android SDK built for x86")
+            //bluestacks
+            || "QC_Reference_Phone" == Build.BOARD && !"Xiaomi".equals(Build.MANUFACTURER, ignoreCase = true)
+            //bluestacks
+            || Build.MANUFACTURER.contains("Genymotion")
+            || Build.HOST.startsWith("Build")
+            //MSI App Player
+            || Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic")
+            || Build.PRODUCT == "google_sdk"
+            )
+
+    if (!isEmulator) {
+        LocationChecker(viewModel, context)
+        ContactsChecker(viewModel = viewModel, context = context)
     }
 
     Box(modifier = Modifier.fillMaxSize()) {

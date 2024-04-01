@@ -5,15 +5,16 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.spygamers.controllers.GamerViewModel
-import com.example.spygamers.screens.HomeScreen
 import com.example.spygamers.screens.InitialScreen
 import com.example.spygamers.screens.LoginScreen
-import com.example.spygamers.screens.SettingScreen
 import com.example.spygamers.screens.creategroup.CreateGroupScreen
 import com.example.spygamers.screens.directmessage.DirectMessageScreen
 import com.example.spygamers.screens.friendlist.FriendListScreen
 import com.example.spygamers.screens.friendrecommendation.FriendRecommendationScreen
+import com.example.spygamers.screens.grouplist.GroupListScreen
 import com.example.spygamers.screens.groupmessage.GroupMessageScreen
+import com.example.spygamers.screens.home.HomeScreen
+import com.example.spygamers.screens.recommendgroups.RecommendGroupsScreen
 import com.example.spygamers.screens.register.RegisterScreen
 import com.example.spygamers.screens.viewprofile.ViewProfileScreen
 
@@ -25,7 +26,6 @@ sealed class Screen(val route: String) {
     object InitialScreen: Screen(route = "Initial_Screen")
     object LoginScreen : Screen(route = "Login_Screen")
     object RegisterScreen : Screen(route = "Register_Screen")
-    object SettingScreen : Screen(route = "Setting_Screen")
     object FriendListScreen : Screen(route = "FriendList_Screen")
     object GroupListScreen : Screen(route = "GroupList_Screen")
     object HomeScreen : Screen(route = "Home_Screen")
@@ -60,9 +60,6 @@ fun NavGraph(
             ViewProfileScreen(navController = navController, viewModel = viewModel)
         }
 
-        composable(route = Screen.SettingScreen.route) {
-            SettingScreen(navController = navController, viewModel)
-        }
         composable(route = Screen.HomeScreen.route) {
             HomeScreen(navController = navController, viewModel)
         }
@@ -87,6 +84,14 @@ fun NavGraph(
 
         composable(route = Screen.GroupMessageScreen.route) {
             GroupMessageScreen(navController = navController, viewModel = viewModel)
+        }
+        
+        composable(route = Screen.GroupListScreen.route) {
+            GroupListScreen(navController = navController, viewModel = viewModel)
+        }
+
+        composable(route = Screen.GroupRecommendationScreen.route) {
+            RecommendGroupsScreen(navController = navController, viewModel = viewModel)
         }
     }
 }

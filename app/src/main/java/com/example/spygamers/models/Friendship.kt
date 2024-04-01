@@ -10,6 +10,8 @@ import com.google.gson.annotations.SerializedName
 data class Friendship(
     @SerializedName("account_id")
     val accountID: Int,
+    @SerializedName("username")
     val username: String,
+    @SerializedName("status")
     val status: String,
 )

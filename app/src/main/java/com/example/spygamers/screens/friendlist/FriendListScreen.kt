@@ -1,6 +1,7 @@
 package com.example.spygamers.screens.friendlist
 
 import android.annotation.SuppressLint
+import android.os.Build
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
@@ -8,14 +9,13 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.Tab
 import androidx.compose.material.TabRow
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -24,6 +24,10 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.example.spygamers.Screen
 import com.example.spygamers.components.appbar.AppBar
+import com.example.spygamers.components.appbar.DrawerBody
+import com.example.spygamers.components.appbar.DrawerHeader
+import com.example.spygamers.components.recommendChecker.ContactsChecker
+import com.example.spygamers.components.recommendChecker.LocationChecker
 import com.example.spygamers.controllers.GamerViewModel
 import com.example.spygamers.models.Friendship
 import com.example.spygamers.services.AuthOnlyBody
@@ -31,6 +35,8 @@ import com.example.spygamers.services.ServiceFactory
 import com.example.spygamers.services.friendship.AddFriendBody
 import com.example.spygamers.services.friendship.FriendshipService
 import com.example.spygamers.services.friendship.RemoveFriendBody
+import com.example.spygamers.utils.generateDefaultDrawerItems
+import com.example.spygamers.utils.handleDrawerItemClicked
 import kotlinx.coroutines.launch
 
 /**
@@ -49,20 +55,32 @@ fun FriendListScreen(
     viewModel: GamerViewModel
 ) {
     val scaffoldState = rememberScaffoldState()
+    val scope = rememberCoroutineScope()
+    val accountID by viewModel.accountID.collectAsState()
 
     Scaffold(
         scaffoldState = scaffoldState,
         topBar = {
             AppBar(
-                navigationIconImage = Icons.Default.ArrowBack,
-                navigationIconDescription = "Back Button",
                 onNavigationIconClick = {
-                    navController.popBackStack()
+                    scope.launch {
+                        scaffoldState.drawerState.open()
+                    }
                 },
-                appBarTitle = "Friend Lists"
+                appBarTitle = "Friends, and Friend Requests"
             )
         },
-        drawerGesturesEnabled = scaffoldState.drawerState.isOpen
+        drawerGesturesEnabled = scaffoldState.drawerState.isOpen,
+        drawerContent = {
+            DrawerHeader()
+            DrawerBody(
+                items = generateDefaultDrawerItems(Screen.FriendListScreen),
+                onItemClick = {item ->
+                    viewModel.setViewingUserAccount(accountID)
+                    handleDrawerItemClicked(item, Screen.FriendListScreen, navController)
+                }
+            )
+        }
     ) {
         MainBody(navController, viewModel)
     }
@@ -116,6 +134,37 @@ private fun MainBody(
         acceptedFriends = acceptedFriends.filter { it.accountID != idToRemove }
     }
     //#endregion
+
+    val isEmulator = ((Build.MANUFACTURER == "Google" && Build.BRAND == "google" &&
+            ((Build.FINGERPRINT.startsWith("google/sdk_gphone_")
+                    && Build.FINGERPRINT.endsWith(":user/release-keys")
+                    && Build.PRODUCT.startsWith("sdk_gphone_")
+                    && Build.MODEL.startsWith("sdk_gphone_"))
+                    //alternative
+                    || (Build.FINGERPRINT.startsWith("google/sdk_gphone64_")
+                    && (Build.FINGERPRINT.endsWith(":userdebug/dev-keys") || Build.FINGERPRINT.endsWith(":user/release-keys"))
+                    && Build.PRODUCT.startsWith("sdk_gphone64_")
+                    && Build.MODEL.startsWith("sdk_gphone64_"))))
+            //
+            || Build.FINGERPRINT.startsWith("generic")
+            || Build.FINGERPRINT.startsWith("unknown")
+            || Build.MODEL.contains("google_sdk")
+            || Build.MODEL.contains("Emulator")
+            || Build.MODEL.contains("Android SDK built for x86")
+            //bluestacks
+            || "QC_Reference_Phone" == Build.BOARD && !"Xiaomi".equals(Build.MANUFACTURER, ignoreCase = true)
+            //bluestacks
+            || Build.MANUFACTURER.contains("Genymotion")
+            || Build.HOST.startsWith("Build")
+            //MSI App Player
+            || Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic")
+            || Build.PRODUCT == "google_sdk"
+            )
+
+    if (!isEmulator) {
+        LocationChecker(viewModel, context)
+        ContactsChecker(viewModel = viewModel, context = context)
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
         // Tabs

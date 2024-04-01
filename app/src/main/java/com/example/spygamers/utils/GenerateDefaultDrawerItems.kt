@@ -4,7 +4,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Settings
 import com.example.spygamers.R
 import com.example.spygamers.Screen
 import com.example.spygamers.models.DrawerMenuItem
@@ -60,13 +59,6 @@ fun generateDefaultDrawerItems(currentSelectedItem: Screen? = null): List<Drawer
             contentDescription = "Get Recommended Groups to join",
             icon = ImageResource.Drawable(R.drawable.ic_recommend_group),
             isSelected = currentSelectedItem?.route === Screen.GroupRecommendationScreen.route
-        ),
-        DrawerMenuItem(
-            id = Screen.SettingScreen.route,
-            title = "Settings",
-            contentDescription = "Change your settings",
-            icon = ImageResource.Vector(Icons.Default.Settings),
-            isSelected = currentSelectedItem?.route === Screen.SettingScreen.route
-        ),
+        )
     )
 }

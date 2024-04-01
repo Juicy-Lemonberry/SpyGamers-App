@@ -1,20 +1,29 @@
 package com.example.spygamers.screens.directmessage
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
+import android.os.Build
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Scaffold
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -27,11 +36,17 @@ import com.example.spygamers.components.appbar.DrawerHeader
 import com.example.spygamers.components.chatting.ChatInputRow
 import com.example.spygamers.components.chatting.MessageData
 import com.example.spygamers.components.chatting.MessageRow
+import com.example.spygamers.components.dialogs.ConfirmDialog
+import com.example.spygamers.components.recommendChecker.ContactsChecker
+import com.example.spygamers.components.recommendChecker.LocationChecker
 import com.example.spygamers.controllers.GamerViewModel
 import com.example.spygamers.services.ServiceFactory
 import com.example.spygamers.services.directmessaging.DirectMessagingService
 import com.example.spygamers.utils.generateDefaultDrawerItems
 import com.example.spygamers.utils.handleDrawerItemClicked
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -66,7 +81,7 @@ fun DirectMessageScreen(
                 items = generateDefaultDrawerItems(),
                 onItemClick = {item ->
                     viewModel.setViewingUserAccount(accountID)
-                    handleDrawerItemClicked(item, Screen.HomeScreen, navController)
+                    handleDrawerItemClicked(item, Screen.DirectMessageScreen, navController)
                 }
             )
         }
@@ -75,17 +90,92 @@ fun DirectMessageScreen(
     }
 }
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 private fun MainBody(
     navController: NavController,
     viewModel: GamerViewModel
 ) {
+    val permissionsState = rememberPermissionState(
+        Manifest.permission.READ_EXTERNAL_STORAGE
+    )
+    val permissionGrantState by viewModel.grantedMediaFileAccess.collectAsState()
+
+    val coroutineScope = rememberCoroutineScope()
     val serviceFactory = ServiceFactory()
     val context = LocalContext.current
 
     val currentUsername by viewModel.username.collectAsState()
     val messages = viewModel.directMessages
     val lazyListState = rememberLazyListState()
+
+    var requestedForPermissions by rememberSaveable {
+        mutableStateOf(false)
+    }
+
+    // Request for permission to send attachments...
+    if (!requestedForPermissions && !permissionGrantState) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+
+        if (permissionsState.status.isGranted) {
+            Log.d("DirectMessageScreen", "All permissions already granted, skipping...")
+            // All permissions already granted, no need to request...
+            requestedForPermissions = true
+            return
+        }
+
+        Log.d("DirectMessageScreen", "No permissions granted, requesting...")
+        // Popup explain why we need permissions, before requesting...
+        ConfirmDialog(
+            textContent = "We require permissions to send attachments!",
+            onDismiss = {
+                Log.d("DirectMessageScreen", "Rejected to give permissions...")
+                Toast.makeText(context, "Sending of attachments may not work...", Toast.LENGTH_LONG).show()
+                requestedForPermissions = true
+            },
+            onConfirm = {
+                coroutineScope.launch {
+                    permissionsState.launchPermissionRequest()
+                    requestedForPermissions = true
+                    viewModel.updateMediaFileGrants(true)
+                }
+            }
+        )
+        return;
+    }
+
+    val isEmulator = ((Build.MANUFACTURER == "Google" && Build.BRAND == "google" &&
+            ((Build.FINGERPRINT.startsWith("google/sdk_gphone_")
+                    && Build.FINGERPRINT.endsWith(":user/release-keys")
+                    && Build.PRODUCT.startsWith("sdk_gphone_")
+                    && Build.MODEL.startsWith("sdk_gphone_"))
+                    //alternative
+                    || (Build.FINGERPRINT.startsWith("google/sdk_gphone64_")
+                    && (Build.FINGERPRINT.endsWith(":userdebug/dev-keys") || Build.FINGERPRINT.endsWith(":user/release-keys"))
+                    && Build.PRODUCT.startsWith("sdk_gphone64_")
+                    && Build.MODEL.startsWith("sdk_gphone64_"))))
+            //
+            || Build.FINGERPRINT.startsWith("generic")
+            || Build.FINGERPRINT.startsWith("unknown")
+            || Build.MODEL.contains("google_sdk")
+            || Build.MODEL.contains("Emulator")
+            || Build.MODEL.contains("Android SDK built for x86")
+            //bluestacks
+            || "QC_Reference_Phone" == Build.BOARD && !"Xiaomi".equals(Build.MANUFACTURER, ignoreCase = true)
+            //bluestacks
+            || Build.MANUFACTURER.contains("Genymotion")
+            || Build.HOST.startsWith("Build")
+            //MSI App Player
+            || Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic")
+            || Build.PRODUCT == "google_sdk"
+            )
+
+    if (!isEmulator) {
+        LocationChecker(viewModel, context)
+        ContactsChecker(viewModel = viewModel, context = context)
+    }
 
     // TODO: Show something like 'this is the start of ur conversation' if there are no messages...
     // TODO: Implement dynamic loading (load more messages once user hit the top of the messages list...)

@@ -10,7 +10,9 @@ data class DirectMessage(
     val senderUsername: String,
     @SerializedName("contact_username")
     val contactUsername: String,
+    @SerializedName("content")
     val content: String,
+    @SerializedName("timestamp")
     val timestamp: Date,
     @SerializedName("attachments_id")
     val attachmentsID: List<Int>,

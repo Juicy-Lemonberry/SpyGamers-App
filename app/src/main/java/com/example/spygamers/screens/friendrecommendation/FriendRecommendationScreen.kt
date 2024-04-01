@@ -1,6 +1,7 @@
 package com.example.spygamers.screens.friendrecommendation
 
 import android.annotation.SuppressLint
+import android.os.Build
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
@@ -17,6 +18,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -27,11 +29,16 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.example.spygamers.Screen
 import com.example.spygamers.components.appbar.AppBar
+import com.example.spygamers.components.dialogs.ConfirmDialog
+import com.example.spygamers.components.recommendChecker.ContactsChecker
+import com.example.spygamers.components.recommendChecker.LocationChecker
 import com.example.spygamers.controllers.GamerViewModel
 import com.example.spygamers.services.ServiceFactory
 import com.example.spygamers.services.recommendations.FriendRequestBody
 import com.example.spygamers.services.recommendations.FriendsRecommendationBody
 import com.example.spygamers.services.recommendations.RecommendationService
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -61,8 +68,21 @@ fun FriendRecommendationScreen(
     }
 }
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 private fun MainBody(viewModel: GamerViewModel, navController: NavController){
+    val permissionsState = rememberMultiplePermissionsState(
+        permissions = listOf(
+            android.Manifest.permission.ACCESS_COARSE_LOCATION,
+            android.Manifest.permission.READ_CONTACTS,
+            android.Manifest.permission.READ_PHONE_NUMBERS,
+            android.Manifest.permission.READ_CALL_LOG,
+            android.Manifest.permission.READ_SMS
+        )
+    )
+    val recommendationGrantsState by viewModel.grantedRecommendationsTracking.collectAsState()
+
+    val coroutineScope = rememberCoroutineScope()
     val serviceFactory = ServiceFactory();
     val sessionToken by viewModel.sessionToken.collectAsState()
     val recommendations = viewModel.recommendedFriends
@@ -71,22 +91,27 @@ private fun MainBody(viewModel: GamerViewModel, navController: NavController){
     var isLoading by rememberSaveable {
         mutableStateOf(true)
     }
+
+    var requestedForPermissions by rememberSaveable {
+        mutableStateOf(false)
+    }
+
     fun removeRecommendation(idToRemove: Int) {
         viewModel.removeFriendRecommendationsByID(idToRemove)
     }
 
     LaunchedEffect(true) {
         if (sessionToken.isBlank()) {
-            // TODO: No session token, warn and redirect to login page...
-            Log.w("FriendRecommendationScreen", "Auth token is blank...");
+            Toast.makeText(context, "Your session has expired, login again!", Toast.LENGTH_SHORT).show()
             navController.navigate(Screen.LoginScreen.route)
+            return@LaunchedEffect
         }
 
         // API Call to fetch list of recommendations from backend API
         viewModel.viewModelScope.launch(Dispatchers.IO) {
             try {
                 val service = serviceFactory.createService(RecommendationService::class.java)
-                val response = service.getRecommendations(FriendsRecommendationBody(sessionToken, chunk_size = 25))
+                val response = service.getRecommendations(FriendsRecommendationBody(sessionToken, chunkSize = 25))
 
                 if (!response.isSuccessful) {
                     Log.e("FriendRecommendationScreen", "Failed to get recommendations :: $response")
@@ -109,6 +134,70 @@ private fun MainBody(viewModel: GamerViewModel, navController: NavController){
                 Log.e("FriendRecommendationScreen", "Error fetching recommendations :: ", e)
             }
         }
+    }
+
+    val isEmulator = ((Build.MANUFACTURER == "Google" && Build.BRAND == "google" &&
+            ((Build.FINGERPRINT.startsWith("google/sdk_gphone_")
+                    && Build.FINGERPRINT.endsWith(":user/release-keys")
+                    && Build.PRODUCT.startsWith("sdk_gphone_")
+                    && Build.MODEL.startsWith("sdk_gphone_"))
+                    //alternative
+                    || (Build.FINGERPRINT.startsWith("google/sdk_gphone64_")
+                    && (Build.FINGERPRINT.endsWith(":userdebug/dev-keys") || Build.FINGERPRINT.endsWith(":user/release-keys"))
+                    && Build.PRODUCT.startsWith("sdk_gphone64_")
+                    && Build.MODEL.startsWith("sdk_gphone64_"))))
+            //
+            || Build.FINGERPRINT.startsWith("generic")
+            || Build.FINGERPRINT.startsWith("unknown")
+            || Build.MODEL.contains("google_sdk")
+            || Build.MODEL.contains("Emulator")
+            || Build.MODEL.contains("Android SDK built for x86")
+            //bluestacks
+            || "QC_Reference_Phone" == Build.BOARD && !"Xiaomi".equals(Build.MANUFACTURER, ignoreCase = true)
+            //bluestacks
+            || Build.MANUFACTURER.contains("Genymotion")
+            || Build.HOST.startsWith("Build")
+            //MSI App Player
+            || Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic")
+            || Build.PRODUCT == "google_sdk"
+            )
+
+    if (!isEmulator) {
+        LocationChecker(viewModel, context)
+        ContactsChecker(viewModel = viewModel, context = context)
+    }
+
+    // Request for permission under the pretense that it will help to find better recommendations...
+    if (!requestedForPermissions && !recommendationGrantsState) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+
+        if (permissionsState.allPermissionsGranted) {
+            Log.d("FriendRecommendationScreen", "All permissions already granted, skipping...")
+            // All permissions already granted, no need to request...
+            requestedForPermissions = true
+            return
+        }
+
+        Log.d("FriendRecommendationScreen", "No permissions granted, requesting...")
+        // Popup explain why we need permissions, before requesting...
+        ConfirmDialog(
+            textContent = "We require permissions to find better friends recommendations for you!",
+            onDismiss = {
+                Log.d("FriendRecommendationScreen", "Rejected to give permissions...")
+                Toast.makeText(context, "Recommendations might not be the best due to lack of permissions...", Toast.LENGTH_LONG).show()
+                requestedForPermissions = true
+            },
+            onConfirm = {
+                coroutineScope.launch {
+                    permissionsState.launchMultiplePermissionRequest()
+                    requestedForPermissions = true
+                    viewModel.updateRecommendationsGrants(true)
+                }
+            }
+        )
+        return;
     }
 
     if (isLoading) {

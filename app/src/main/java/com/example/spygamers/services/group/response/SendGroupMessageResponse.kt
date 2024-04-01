@@ -14,6 +14,8 @@ data class CreatedGroupMessage (
 )
 
 data class SendGroupMessageResponse (
+    @SerializedName("status")
     val status: String,
+    @SerializedName("result")
     val result: CreatedGroupMessage
 )

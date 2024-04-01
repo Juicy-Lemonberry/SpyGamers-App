@@ -4,6 +4,7 @@ import com.example.spygamers.services.ResponseContract
 import com.google.gson.annotations.SerializedName
 
 data class LoginResponse(
+    @SerializedName("status")
     override val status: String,
 
     @SerializedName("session_token")
