@@ -5,5 +5,6 @@ import com.google.gson.annotations.SerializedName
 data class GetAccountGroupsBody (
     @SerializedName("auth_token")
     val authToken: String,
+    @SerializedName("filter")
     val filter: String = ""
 )

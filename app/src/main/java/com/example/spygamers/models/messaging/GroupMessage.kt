@@ -10,7 +10,9 @@ data class GroupMessage(
     val senderID: Int,
     @SerializedName("sender_username")
     val senderUsername: String,
+    @SerializedName("content")
     val content: String,
+    @SerializedName("timestamp")
     val timestamp: Date,
     @SerializedName("attachments_id")
     val attachmentsID: List<Int>,

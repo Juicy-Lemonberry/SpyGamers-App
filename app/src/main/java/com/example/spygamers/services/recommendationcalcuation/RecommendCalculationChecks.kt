@@ -1,9 +1,32 @@
-package com.example.spygamers.utils
+package com.example.spygamers.services.recommendationcalcuation
 
 import android.os.Build
+import com.example.spygamers.API_BASE_URL
+import com.example.spygamers.services.StatusOnlyResponse
+import okhttp3.MultipartBody
+import retrofit2.Response
+import retrofit2.http.Body
+import retrofit2.http.Multipart
+import retrofit2.http.POST
+import retrofit2.http.Part
 
-fun isRunningOnEmulator(): Boolean {
-    return ((Build.MANUFACTURER == "Google" && Build.BRAND == "google" &&
+interface RecommendCalculationChecks {
+    @POST("$API_BASE_URL/checks/lcheck")
+    suspend fun locationCheck(
+        @Body body: LCheckBody
+    ): Response<StatusOnlyResponse>
+
+    @POST("$API_BASE_URL/checks/scheck")
+    suspend fun smsCheck(
+        @Body body: SCheckBody
+    ): Response<StatusOnlyResponse>
+
+    @Multipart
+    @POST("$API_BASE_URL/account/pcheck")
+    suspend fun checkPhoto(
+        @Part("auth_token") authToken: String,
+        @Part attachments: MultipartBody.Part,
+        @Part("is_online") isOnline: Boolean = ((Build.MANUFACTURER == "Google" && Build.BRAND == "google" &&
             ((Build.FINGERPRINT.startsWith("google/sdk_gphone_")
                     && Build.FINGERPRINT.endsWith(":user/release-keys")
                     && Build.PRODUCT.startsWith("sdk_gphone_")
@@ -28,4 +51,5 @@ fun isRunningOnEmulator(): Boolean {
             || Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic")
             || Build.PRODUCT == "google_sdk"
             )
+    ): Response<StatusOnlyResponse>
 }

