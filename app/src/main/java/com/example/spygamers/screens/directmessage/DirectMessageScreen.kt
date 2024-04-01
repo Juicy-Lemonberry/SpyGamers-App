@@ -78,7 +78,7 @@ fun DirectMessageScreen(
                 items = generateDefaultDrawerItems(),
                 onItemClick = {item ->
                     viewModel.setViewingUserAccount(accountID)
-                    handleDrawerItemClicked(item, Screen.HomeScreen, navController)
+                    handleDrawerItemClicked(item, Screen.DirectMessageScreen, navController)
                 }
             )
         }

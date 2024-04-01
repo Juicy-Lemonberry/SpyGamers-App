@@ -15,8 +15,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -35,11 +33,15 @@ import androidx.navigation.NavController
 import com.example.spygamers.Screen
 import com.example.spygamers.components.ProfilePictureIcon
 import com.example.spygamers.components.appbar.AppBar
+import com.example.spygamers.components.appbar.DrawerBody
+import com.example.spygamers.components.appbar.DrawerHeader
 import com.example.spygamers.controllers.GamerViewModel
 import com.example.spygamers.models.Group
 import com.example.spygamers.services.ServiceFactory
 import com.example.spygamers.services.group.GroupService
 import com.example.spygamers.services.group.body.GetAccountGroupsBody
+import com.example.spygamers.utils.generateDefaultDrawerItems
+import com.example.spygamers.utils.handleDrawerItemClicked
 import kotlinx.coroutines.launch
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
@@ -49,20 +51,32 @@ fun GroupListScreen(
     viewModel: GamerViewModel
 ) {
     val scaffoldState = rememberScaffoldState()
+    val scope = rememberCoroutineScope()
+    val accountID by viewModel.accountID.collectAsState()
 
     Scaffold(
         scaffoldState = scaffoldState,
         topBar = {
             AppBar(
-                navigationIconImage = Icons.Default.ArrowBack,
-                navigationIconDescription = "Back Button",
                 onNavigationIconClick = {
-                    navController.popBackStack()
+                    scope.launch {
+                        scaffoldState.drawerState.open()
+                    }
                 },
-                appBarTitle = "Group Lists"
+                appBarTitle = "Your Groups"
             )
         },
-        drawerGesturesEnabled = scaffoldState.drawerState.isOpen
+        drawerGesturesEnabled = scaffoldState.drawerState.isOpen,
+        drawerContent = {
+            DrawerHeader()
+            DrawerBody(
+                items = generateDefaultDrawerItems(Screen.GroupListScreen),
+                onItemClick = {item ->
+                    viewModel.setViewingUserAccount(accountID)
+                    handleDrawerItemClicked(item, Screen.GroupListScreen, navController)
+                }
+            )
+        }
     ) {
         MainBody(navController, viewModel)
     }

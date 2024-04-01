@@ -81,7 +81,7 @@ fun GroupMessageScreen(
                 items = generateDefaultDrawerItems(),
                 onItemClick = {item ->
                     viewModel.setViewingUserAccount(accountID)
-                    handleDrawerItemClicked(item, Screen.HomeScreen, navController)
+                    handleDrawerItemClicked(item, Screen.GroupMessageScreen, navController)
                 }
             )
         }

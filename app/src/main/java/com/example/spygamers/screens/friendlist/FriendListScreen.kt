@@ -8,14 +8,13 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.Tab
 import androidx.compose.material.TabRow
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -24,6 +23,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.example.spygamers.Screen
 import com.example.spygamers.components.appbar.AppBar
+import com.example.spygamers.components.appbar.DrawerBody
+import com.example.spygamers.components.appbar.DrawerHeader
 import com.example.spygamers.controllers.GamerViewModel
 import com.example.spygamers.models.Friendship
 import com.example.spygamers.services.AuthOnlyBody
@@ -31,6 +32,8 @@ import com.example.spygamers.services.ServiceFactory
 import com.example.spygamers.services.friendship.AddFriendBody
 import com.example.spygamers.services.friendship.FriendshipService
 import com.example.spygamers.services.friendship.RemoveFriendBody
+import com.example.spygamers.utils.generateDefaultDrawerItems
+import com.example.spygamers.utils.handleDrawerItemClicked
 import kotlinx.coroutines.launch
 
 /**
@@ -49,20 +52,32 @@ fun FriendListScreen(
     viewModel: GamerViewModel
 ) {
     val scaffoldState = rememberScaffoldState()
+    val scope = rememberCoroutineScope()
+    val accountID by viewModel.accountID.collectAsState()
 
     Scaffold(
         scaffoldState = scaffoldState,
         topBar = {
             AppBar(
-                navigationIconImage = Icons.Default.ArrowBack,
-                navigationIconDescription = "Back Button",
                 onNavigationIconClick = {
-                    navController.popBackStack()
+                    scope.launch {
+                        scaffoldState.drawerState.open()
+                    }
                 },
-                appBarTitle = "Friend Lists"
+                appBarTitle = "Friends, and Friend Requests"
             )
         },
-        drawerGesturesEnabled = scaffoldState.drawerState.isOpen
+        drawerGesturesEnabled = scaffoldState.drawerState.isOpen,
+        drawerContent = {
+            DrawerHeader()
+            DrawerBody(
+                items = generateDefaultDrawerItems(Screen.FriendListScreen),
+                onItemClick = {item ->
+                    viewModel.setViewingUserAccount(accountID)
+                    handleDrawerItemClicked(item, Screen.FriendListScreen, navController)
+                }
+            )
+        }
     ) {
         MainBody(navController, viewModel)
     }

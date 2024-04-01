@@ -99,9 +99,9 @@ private fun MainBody(viewModel: GamerViewModel, navController: NavController){
 
     LaunchedEffect(true) {
         if (sessionToken.isBlank()) {
-            // TODO: No session token, warn and redirect to login page...
-            Log.w("FriendRecommendationScreen", "Auth token is blank...");
+            Toast.makeText(context, "Your session has expired, login again!", Toast.LENGTH_SHORT).show()
             navController.navigate(Screen.LoginScreen.route)
+            return@LaunchedEffect
         }
 
         // API Call to fetch list of recommendations from backend API
