@@ -3,6 +3,7 @@ package com.example.spygamers.screens.groupmessage
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
+import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.Box
@@ -40,6 +41,7 @@ import com.example.spygamers.controllers.GamerViewModel
 import com.example.spygamers.models.messaging.GroupMessage
 import com.example.spygamers.services.ServiceFactory
 import com.example.spygamers.services.group.GroupService
+import com.example.spygamers.services.group.response.SendGroupMessageResponse
 import com.example.spygamers.utils.generateDefaultDrawerItems
 import com.example.spygamers.utils.handleDrawerItemClicked
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -47,6 +49,10 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.toRequestBody
+import retrofit2.Response
 
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
@@ -105,6 +111,7 @@ private fun MainBody(
     val serviceFactory = ServiceFactory()
     val context = LocalContext.current
 
+    val sessionToken by viewModel.sessionToken.collectAsState()
     val currentUsername by viewModel.username.collectAsState()
     val messages = viewModel.groupMessages
     val lazyListState = rememberLazyListState()
@@ -161,6 +168,7 @@ private fun MainBody(
             items(messages.size) { index ->
                 val groupMessage = messages[index]
                 Log.d("GroupMessageScreen", "INDEX :: $index :: $groupMessage")
+                Log.d("GroupMessageScreen.Attachments", "ATTACHMENTS :: ${groupMessage.attachmentsID}")
                 val messageData = MessageData(
                     messageID = groupMessage.messageID,
                     authorUsername = groupMessage.senderUsername,
@@ -171,17 +179,23 @@ private fun MainBody(
                     isDeletedMessage = groupMessage.isDeleted
                 )
 
-                MessageRow(messageData)
+                MessageRow(
+                    messageData,
+                    sessionToken,
+                    serviceFactory,
+                    context
+                )
             }
         }
 
         ChatInputRow(
-            onUserSendMessage = {
+            onUserSendMessage = { messageContent, attachmentUri ->
                 sendMessageToGroup(
                     viewModel,
                     context,
                     serviceFactory,
-                    it
+                    messageContent,
+                    attachmentUri
                 )
             }
         )
@@ -201,8 +215,15 @@ private fun sendMessageToGroup(
     viewModel: GamerViewModel,
     context: Context,
     serviceFactory: ServiceFactory,
-    content: String
+    content: String,
+    imageUri: Uri?
 ) {
+    var sendImage = imageUri != null
+    if (sendImage && !viewModel.grantedMediaFileAccess.value) {
+        Toast.makeText(context, "Unable to send image due to insufficient permissions!", Toast.LENGTH_SHORT).show()
+        sendImage = false
+    }
+
     // TODO: Allow handling of attachments...
     viewModel.viewModelScope.launch(Dispatchers.IO) {
         try {
@@ -210,11 +231,35 @@ private fun sendMessageToGroup(
             val targetGroupID = viewModel.targetGroupID.value
 
             val service = serviceFactory.createService(GroupService::class.java)
-            val response = service.sendMessage(
-                authToken = sessionToken,
-                targetGroupID = targetGroupID,
-                content = content
-            )
+
+            var response: Response<SendGroupMessageResponse>
+            val authTokenPart = MultipartBody.Part.createFormData("auth_token", sessionToken)
+            val groupIDPart = MultipartBody.Part.createFormData("group_id", targetGroupID.toString())
+            val contentPart = MultipartBody.Part.createFormData("content", content)
+
+            if (sendImage) {
+                // Prepare image part if Uri is not null
+                val imagePart = imageUri?.let { uri ->
+                    uriToMultipartBodyPart(
+                        context,
+                        uri,
+                        "attachments"
+                    )
+                }
+
+                response = service.sendMessage(
+                    authToken = authTokenPart,
+                    targetGroupID = groupIDPart,
+                    content = contentPart,
+                    attachments = imagePart
+                )
+            } else {
+                response = service.sendMessage(
+                    authToken = authTokenPart,
+                    targetGroupID = groupIDPart,
+                    content = contentPart
+                )
+            }
 
             if (!response.isSuccessful) {
                 Log.e("DirectMessageScreen.sendMessageToUser", "Failed to send message :: $response")
@@ -244,5 +289,33 @@ private fun sendMessageToGroup(
         } catch (e: Exception) {
             Log.e("DirectMessageScreen.sendMessageToUser", "Error sending message :: ", e)
         }
+    }
+}
+
+private fun uriToMultipartBodyPart(context: Context, uri: Uri, partName: String): MultipartBody.Part? {
+    return try {
+        // Use 'use' function to automatically close the InputStream after operation completes
+        val byteArray = context.contentResolver.openInputStream(uri)?.use { inputStream ->
+            // Convert the InputStream to a ByteArray
+            inputStream.readBytes()
+        }
+
+        // Proceed only if byteArray is not null
+        byteArray?.let {
+            // Determine the MIME type for the file
+            val mimeType = context.contentResolver.getType(uri) ?: "application/octet-stream"
+
+            // Convert the ByteArray to a RequestBody
+            val requestBody = it.toRequestBody(mimeType.toMediaTypeOrNull())
+
+            // Generate the filename
+            val filename = uri.lastPathSegment ?: "file_${System.currentTimeMillis()}"
+
+            // Create and return the MultipartBody.Part
+            MultipartBody.Part.createFormData(partName, filename, requestBody)
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
     }
 }

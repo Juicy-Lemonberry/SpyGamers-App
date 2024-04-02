@@ -2,7 +2,9 @@ package com.example.spygamers.services.directmessaging
 
 import com.example.spygamers.API_BASE_URL
 import com.example.spygamers.services.StatusOnlyResponse
+import com.google.gson.annotations.SerializedName
 import okhttp3.MultipartBody
+import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.Multipart
@@ -18,9 +20,23 @@ interface DirectMessagingService {
     @Multipart
     @POST("$API_BASE_URL/account/send-direct-message")
     suspend fun sendDirectMessage(
-        @Part("auth_token") authToken: String,
-        @Part("target_account_id") targetAccountID: Int,
-        @Part("content") content: String,
-        @Part files: List<MultipartBody.Part>? = null,
+        @Part authToken: MultipartBody.Part,
+        @Part targetAccountID: MultipartBody.Part,
+        @Part content: MultipartBody.Part,
+        @Part attachments: MultipartBody.Part? = null,
     ): Response<StatusOnlyResponse>
+
+    @POST("$API_BASE_URL/image/get-attachment")
+    suspend fun getAttachment(
+        @Body body: GetAttachmentBody
+    ): Response<ResponseBody>
 }
+
+data class GetAttachmentBody(
+    @SerializedName("auth_token")
+    val authToken: String,
+    @SerializedName("attachment_id")
+    val attachmentID: Int,
+    @SerializedName("attachment_type")
+    val attachmentType: String
+)

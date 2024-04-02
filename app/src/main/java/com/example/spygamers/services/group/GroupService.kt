@@ -37,10 +37,10 @@ interface GroupService {
     @Multipart
     @POST("$API_BASE_URL/group/send-message")
     suspend fun sendMessage(
-        @Part("auth_token") authToken: String,
-        @Part("group_id") targetGroupID: Int,
-        @Part("content") content: String,
-        @Part files: List<MultipartBody.Part>? = null,
+        @Part authToken: MultipartBody.Part,
+        @Part targetGroupID: MultipartBody.Part,
+        @Part content: MultipartBody.Part,
+        @Part attachments: MultipartBody.Part? = null
     ): Response<SendGroupMessageResponse>
 
     @POST("$API_BASE_URL/group/add-member")

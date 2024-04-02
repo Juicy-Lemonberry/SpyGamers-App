@@ -104,4 +104,5 @@ dependencies {
     implementation ("org.bouncycastle:bcprov-jdk15on:1.68")
     implementation ("org.bouncycastle:bcpkix-jdk15on:1.68")
     implementation ("org.conscrypt:conscrypt-android:2.5.1")
+    implementation("io.coil-kt:coil-compose:2.6.0")
 }
