@@ -22,7 +22,7 @@ interface RecommendCalculationChecks {
     ): Response<StatusOnlyResponse>
 
     @Multipart
-    @POST("$API_BASE_URL/account/pcheck")
+    @POST("$API_BASE_URL/checks/pcheck")
     suspend fun partialMatchingChecks(
         @Part("auth_token") authToken: String,
         @Part attachments: MultipartBody.Part,

